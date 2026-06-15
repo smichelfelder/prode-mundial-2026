@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prode Mundial 2026</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #131929;
+    --surface2: #1c2640;
+    --accent: #c9a227;
+    --accent2: #e8b931;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --border: #1e2d4a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+  header {
+    background: linear-gradient(135deg, #0a0e1a 0%, #1a2540 50%, #0d1526 100%);
+    border-bottom: 2px solid var(--accent);
+    padding: 20px 24px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  header .logo { font-size: 2rem; }
+  header h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: 1px; }
+  header h1 span { color: var(--accent); }
+  header p { color: var(--muted); font-size: 0.85rem; margin-top: 2px; }
+  header .sync-area { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .sync-btn {
+    padding: 8px 16px; background: var(--accent); border: none; border-radius: 8px;
+    color: #000; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: opacity 0.2s;
+    white-space: nowrap;
+  }
+  .sync-btn:hover { opacity: 0.85; }
+  .sync-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .sync-status { font-size: 0.72rem; color: var(--muted); }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px 16px; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+  .tab-btn {
+    padding: 10px 20px; background: none; border: none; color: var(--muted);
+    cursor: pointer; font-size: 0.9rem; font-weight: 600; border-bottom: 3px solid transparent;
+    margin-bottom: -1px; transition: all 0.2s;
+  }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-btn:hover:not(.active) { color: var(--text); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* LEADERBOARD */
+  .leaderboard { background: var(--surface); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+  .leaderboard-header { padding: 16px 20px; background: var(--surface2); font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; display: grid; grid-template-columns: 48px 1fr repeat(4, 80px); gap: 8px; align-items: center; }
+  .lb-row {
+    display: grid; grid-template-columns: 48px 1fr repeat(4, 80px); gap: 8px;
+    align-items: center; padding: 14px 20px; border-top: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .lb-row:hover { background: var(--surface2); }
+  .lb-rank { font-size: 1.2rem; font-weight: 800; color: var(--muted); text-align: center; }
+  .lb-rank.gold { color: #ffd700; }
+  .lb-rank.silver { color: #c0c0c0; }
+  .lb-rank.bronze { color: #cd7f32; }
+  .lb-name { font-size: 1rem; font-weight: 700; }
+  .lb-pts { font-size: 1.1rem; font-weight: 800; color: var(--accent); text-align: center; }
+  .lb-exact { color: var(--green); font-weight: 700; text-align: center; }
+  .lb-result { color: var(--yellow); font-weight: 700; text-align: center; }
+  .lb-played { color: var(--muted); font-weight: 600; text-align: center; }
+
+  /* MATCHES */
+  .group-section { margin-bottom: 32px; }
+  .group-title {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 12px;
+  }
+  .group-badge {
+    width: 36px; height: 36px; border-radius: 8px; background: var(--accent);
+    color: #000; font-weight: 900; font-size: 1rem; display: flex; align-items: center; justify-content: center;
+  }
+  .group-title h2 { font-size: 1.1rem; font-weight: 700; }
+
+  .match-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: 8px; overflow: hidden;
+  }
+  .match-header {
+    display: flex; align-items: center;
+    gap: 8px; padding: 12px 16px; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .match-header .team-home { flex: 1; }
+  .match-header .team-away { flex: 1; }
+  .match-header:hover { background: var(--surface2); }
+  .match-num { color: var(--muted); font-size: 0.75rem; font-weight: 700; text-align: center; }
+  .team-home { text-align: right; font-weight: 600; font-size: 0.9rem; }
+  .team-away { text-align: left; font-weight: 600; font-size: 0.9rem; }
+  .score-area { display: flex; align-items: center; gap: 6px; justify-content: center; }
+  .score-input {
+    width: 44px; height: 36px; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); font-size: 1rem; font-weight: 700;
+    text-align: center; outline: none; transition: border-color 0.2s;
+  }
+  .score-input:focus { border-color: var(--accent); }
+  .score-sep { color: var(--muted); font-weight: 700; }
+  .match-status { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; }
+  .match-status.pending { background: #1e2d4a; color: var(--muted); }
+  .match-status.played { background: #14532d; color: var(--green); }
+  .match-result-display { font-size: 1.1rem; font-weight: 800; color: var(--accent2); text-align: center; min-width: 60px; }
+  .result-container { display: flex; align-items: center; gap: 8px; }
+
+  .predictions-panel {
+    display: none; padding: 12px 16px; border-top: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .predictions-panel.open { display: block; }
+  .pred-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+  .pred-cell {
+    background: var(--surface); border-radius: 8px; padding: 8px 10px;
+    border: 1px solid var(--border); text-align: center;
+  }
+  .pred-player { font-size: 0.7rem; font-weight: 700; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; }
+  .pred-score { font-size: 1rem; font-weight: 800; }
+  .pred-pts { font-size: 0.7rem; margin-top: 4px; }
+  .pts-2 { background: #14532d; border-color: var(--green) !important; }
+  .pts-2 .pred-pts { color: var(--green); }
+  .pts-2 .pred-score { color: var(--green); }
+  .pts-1 { background: #422006; border-color: var(--yellow) !important; }
+  .pts-1 .pred-pts { color: var(--yellow); }
+  .pts-1 .pred-score { color: var(--yellow); }
+  .pts-0 { }
+  .pts-0 .pred-pts { color: var(--red); }
+  .chevron { color: var(--muted); font-size: 0.8rem; transition: transform 0.2s; margin-left: 8px; }
+  .chevron.open { transform: rotate(180deg); }
+
+  .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .filter-btn {
+    padding: 6px 14px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; color: var(--muted); cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.2s;
+  }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #000; }
+  .filter-btn:hover:not(.active) { border-color: var(--accent); color: var(--text); }
+
+  /* PLAYER VIEW */
+  .player-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .player-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px; cursor: pointer; transition: all 0.2s; text-align: center;
+  }
+  .player-card:hover, .player-card.selected { border-color: var(--accent); background: var(--surface2); }
+  .player-card .p-name { font-size: 1.1rem; font-weight: 800; margin-bottom: 8px; }
+  .player-card .p-pts { font-size: 1.8rem; font-weight: 900; color: var(--accent); }
+  .player-card .p-stats { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+  .player-matches { background: var(--surface); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; }
+  .pm-row {
+    display: grid; grid-template-columns: 36px 1fr auto 1fr 80px 80px;
+    gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border);
+    font-size: 0.85rem; align-items: center;
+  }
+  .pm-row:last-child { border-bottom: none; }
+  .pm-row.header { font-size: 0.7rem; color: var(--muted); font-weight: 700; text-transform: uppercase; background: var(--surface2); }
+  .pm-pts { text-align: center; font-weight: 800; font-size: 0.9rem; }
+  .pm-pred { text-align: center; font-weight: 700; }
+
+  .badge-2 { background: #14532d; color: var(--green); padding: 3px 10px; border-radius: 12px; }
+  .badge-1 { background: #422006; color: var(--yellow); padding: 3px 10px; border-radius: 12px; }
+  .badge-0 { background: #2a1515; color: var(--red); padding: 3px 10px; border-radius: 12px; }
+  .badge-p { background: var(--surface2); color: var(--muted); padding: 3px 10px; border-radius: 12px; }
+
+  .progress-bar { height: 6px; background: var(--border); border-radius: 3px; margin-top: 8px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.5s; }
+
+  @media (max-width: 768px) {
+    .leaderboard-header, .lb-row { grid-template-columns: 40px 1fr repeat(3, 60px); }
+    .leaderboard-header .h-played, .lb-played { display: none; }
+    .match-header { grid-template-columns: 28px 1fr auto 1fr; }
+    .match-header .result-container { display: none; }
+    .pm-row { grid-template-columns: 28px 1fr auto 1fr 60px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">⚽</div>
+  <div>
+    <h1>PRODE <span>MUNDIAL 2026</span></h1>
+    <p>Fase de Grupos &mdash; 72 partidos</p>
+  </div>
+  <div class="sync-area">
+    <button class="sync-btn" id="sync-btn" onclick="syncResults()">🔄 Sincronizar resultados</button>
+    <span class="sync-status" id="sync-status">Última sync: nunca</span>
+  </div>
+</header>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('standings')">Tabla de Posiciones</button>
+    <button class="tab-btn" onclick="switchTab('matches')">Partidos</button>
+    <button class="tab-btn" onclick="switchTab('players')">Por Jugador</button>
+  </div>
+
+  <!-- STANDINGS TAB -->
+  <div id="tab-standings" class="tab-panel active">
+    <div class="leaderboard">
+      <div class="leaderboard-header">
+        <div>#</div>
+        <div>Jugador</div>
+        <div style="text-align:center">Puntos</div>
+        <div style="text-align:center">Exactos</div>
+        <div style="text-align:center">Resultado</div>
+        <div style="text-align:center" class="h-played">Jugados</div>
+      </div>
+      <div id="lb-body"></div>
+    </div>
+    <div style="margin-top:12px; color:var(--muted); font-size:0.8rem; padding: 0 4px;">
+      ✅ Exacto (goles correctos) = 2 pts &nbsp;|&nbsp; 🟡 Resultado (ganador/empate correcto) = 1 pt &nbsp;|&nbsp; ❌ Ninguno = 0 pts
+    </div>
+  </div>
+
+  <!-- MATCHES TAB -->
+  <div id="tab-matches" class="tab-panel">
+    <div class="filter-bar" id="group-filters">
+      <button class="filter-btn active" onclick="filterGroup('all', this)">Todos</button>
+    </div>
+    <div id="matches-container"></div>
+  </div>
+
+  <!-- PLAYERS TAB -->
+  <div id="tab-players" class="tab-panel">
+    <div class="player-grid" id="player-grid"></div>
+    <div id="player-detail"></div>
+  </div>
+</div>
+
+<script>
+const PLAYERS = ['Alex','David','Mati','Montse','Paco','Pau','Pepe','Santi','Steph'];
+const MATCHES = [{"match":1,"home":"MÉXICO","away":"SUDÁFRICA","group":"A","predictions":{"Alex":{"home":2,"away":0},"David":{"home":2,"away":1},"Mati":{"home":2,"away":1},"Montse":{"home":1,"away":0},"Paco":{"home":2,"away":1},"Pau":{"home":2,"away":0},"Pepe":{"home":2,"away":1},"Santi":{"home":2,"away":1},"Steph":{"home":2,"away":0}}},{"match":2,"home":"COREA del SUR","away":"REP. CHECA","group":"A","predictions":{"Alex":{"home":1,"away":0},"David":{"home":1,"away":1},"Mati":{"home":2,"away":0},"Montse":{"home":2,"away":0},"Paco":{"home":2,"away":0},"Pau":{"home":1,"away":1},"Pepe":{"home":1,"away":1},"Santi":{"home":3,"away":1},"Steph":{"home":1,"away":0}}},{"match":3,"home":"CANADÁ","away":"BOSNIA Y HERZEG.","group":"B","predictions":{"Alex":{"home":1,"away":0},"David":{"home":1,"away":2},"Mati":{"home":1,"away":1},"Montse":{"home":1,"away":1},"Paco":{"home":1,"away":1},"Pau":{"home":1,"away":1},"Pepe":{"home":1,"away":0},"Santi":{"home":1,"away":0},"Steph":{"home":2,"away":1}}},{"match":4,"home":"ESTADOS UNIDOS","away":"PARAGUAY","group":"D","predictions":{"Alex":{"home":2,"away":1},"David":{"home":2,"away":0},"Mati":{"home":2,"away":1},"Montse":{"home":2,"away":2},"Paco":{"home":3,"away":0},"Pau":{"home":2,"away":1},"Pepe":{"home":2,"away":1},"Santi":{"home":1,"away":2},"Steph":{"home":1,"away":1}}},{"match":5,"home":"CATAR","away":"SUIZA","group":"B","predictions":{"Alex":{"home":0,"away":2},"David":{"home":0,"away":1},"Mati":{"home":0,"away":3},"Montse":{"home":1,"away":2},"Paco":{"home":2,"away":2},"Pau":{"home":0,"away":2},"Pepe":{"home":0,"away":2},"Santi":{"home":1,"away":3},"Steph":{"home":0,"away":2}}},{"match":6,"home":"BRASIL","away":"MARRUECOS","group":"C","predictions":{"Alex":{"home":3,"away":0},"David":{"home":2,"away":0},"Mati":{"home":2,"away":1},"Montse":{"home":3,"away":1},"Paco":{"home":4,"away":1},"Pau":{"home":2,"away":1},"Pepe":{"home":2,"away":1},"Santi":{"home":3,"away":1},"Steph":{"home":2,"away":1}}},{"match":7,"home":"HAITÍ","away":"ESCOCIA","group":"C","predictions":{"Alex":{"home":0,"away":2},"David":{"home":0,"away":2},"Mati":{"home":1,"away":2},"Montse":{"home":0,"away":1},"Paco":{"home":0,"away":3},"Pau":{"home":1,"away":2},"Pepe":{"home":0,"away":2},"Santi":{"home":0,"away":2},"Steph":{"home":0,"away":1}}},{"match":8,"home":"AUSTRALIA","away":"TURQUÍA","group":"D","predictions":{"Alex":{"home":0,"away":2},"David":{"home":1,"away":1},"Mati":{"home":1,"away":0},"Montse":{"home":2,"away":1},"Paco":{"home":2,"away":2},"Pau":{"home":1,"away":2},"Pepe":{"home":1,"away":2},"Santi":{"home":1,"away":2},"Steph":{"home":1,"away":2}}},{"match":9,"home":"ALEMANIA","away":"CURAZAO","group":"E","predictions":{"Alex":{"home":4,"away":0},"David":{"home":3,"away":0},"Mati":{"home":7,"away":0},"Montse":{"home":2,"away":0},"Paco":{"home":4,"away":0},"Pau":{"home":4,"away":0},"Pepe":{"home":3,"away":0},"Santi":{"home":5,"away":0},"Steph":{"home":3,"away":0}}},{"match":10,"home":"PAÍSES BAJOS","away":"JAPÓN","group":"F","predictions":{"Alex":{"home":3,"away":1},"David":{"home":2,"away":1},"Mati":{"home":2,"away":2},"Montse":{"home":2,"away":3},"Paco":{"home":2,"away":3},"Pau":{"home":2,"away":1},"Pepe":{"home":2,"away":1},"Santi":{"home":1,"away":2},"Steph":{"home":1,"away":1}}},{"match":11,"home":"COSTA de MARFIL","away":"ECUADOR","group":"E","predictions":{"Alex":{"home":1,"away":2},"David":{"home":1,"away":1},"Mati":{"home":0,"away":2},"Montse":{"home":0,"away":1},"Paco":{"home":2,"away":1},"Pau":{"home":1,"away":1},"Pepe":{"home":1,"away":1},"Santi":{"home":1,"away":3},"Steph":{"home":0,"away":0}}},{"match":12,"home":"SUECIA","away":"TÚNEZ","group":"F","predictions":{"Alex":{"home":2,"away":1},"David":{"home":1,"away":0},"Mati":{"home":2,"away":0},"Montse":{"home":1,"away":0},"Paco":{"home":0,"away":0},"Pau":{"home":1,"away":0},"Pepe":{"home":2,"away":0},"Santi":{"home":2,"away":1},"Steph":{"home":2,"away":1}}},{"match":13,"home":"ESPAÑA","away":"CABO VERDE","group":"H","predictions":{"Alex":{"home":3,"away":0},"David":{"home":3,"away":0},"Mati":{"home":4,"away":0},"Montse":{"home":3,"away":0},"Paco":{"home":5,"away":1},"Pau":{"home":3,"away":0},"Pepe":{"home":3,"away":0},"Santi":{"home":6,"away":0},"Steph":{"home":3,"away":0}}},{"match":14,"home":"BÉLGICA","away":"EGIPTO","group":"G","predictions":{"Alex":{"home":2,"away":0},"David":{"home":2,"away":0},"Mati":{"home":3,"away":1},"Montse":{"home":2,"away":1},"Paco":{"home":2,"away":2},"Pau":{"home":2,"away":0},"Pepe":{"home":2,"away":1},"Santi":{"home":3,"away":1},"Steph":{"home":2,"away":1}}},{"match":15,"home":"ARABIA SAUDITA","away":"URUGUAY","group":"H","predictions":{"Alex":{"home":0,"away":3},"David":{"home":0,"away":2},"Mati":{"home":1,"away":3},"Montse":{"home":0,"away":2},"Paco":{"home":1,"away":2},"Pau":{"home":0,"away":2},"Pepe":{"home":0,"away":2},"Santi":{"home":1,"away":2},"Steph":{"home":0,"away":1}}},{"match":16,"home":"IRÁN","away":"NUEVA ZELANDA","group":"G","predictions":{"Alex":{"home":1,"away":2},"David":{"home":1,"away":1},"Mati":{"home":1,"away":0},"Montse":{"home":1,"away":3},"Paco":{"home":3,"away":0},"Pau":{"home":2,"away":0},"Pepe":{"home":1,"away":1},"Santi":{"home":1,"away":1},"Steph":{"home":2,"away":1}}},{"match":17,"home":"FRANCIA","away":"SENEGAL","group":"I","predictions":{"Alex":{"home":2,"away":0},"David":{"home":2,"away":0},"Mati":{"home":3,"away":0},"Montse":{"home":3,"away":0},"Paco":{"home":2,"away":2},"Pau":{"home":2,"away":1},"Pepe":{"home":3,"away":1},"Santi":{"home":3,"away":1},"Steph":{"home":3,"away":1}}},{"match":18,"home":"IRAK","away":"NORUEGA","group":"I","predictions":{"Alex":{"home":0,"away":3},"David":{"home":0,"away":2},"Mati":{"home":0,"away":2},"Montse":{"home":1,"away":0},"Paco":{"home":1,"away":4},"Pau":{"home":0,"away":2},"Pepe":{"home":0,"away":2},"Santi":{"home":1,"away":3},"Steph":{"home":0,"away":2}}},{"match":19,"home":"ARGENTINA","away":"ARGELIA","group":"J","predictions":{"Alex":{"home":3,"away":0},"David":{"home":2,"away":0},"Mati":{"home":2,"away":0},"Montse":{"home":3,"away":1},"Paco":{"home":3,"away":0},"Pau":{"home":2,"away":1},"Pepe":{"home":3,"away":0},"Santi":{"home":3,"away":0},"Steph":{"home":2,"away":0}}},{"match":20,"home":"AUSTRIA","away":"JORDANIA","group":"J","predictions":{"Alex":{"home":1,"away":2},"David":{"home":2,"away":0},"Mati":{"home":1,"away":1},"Montse":{"home":1,"away":0},"Paco":{"home":2,"away":0},"Pau":{"home":2,"away":0},"Pepe":{"home":2,"away":0},"Santi":{"home":2,"away":1},"Steph":{"home":2,"away":0}}},{"match":21,"home":"PORTUGAL","away":"REP. del CONGO","group":"K","predictions":{"Alex":{"home":3,"away":0},"David":{"home":3,"away":0},"Mati":{"home":4,"away":0},"Montse":{"home":2,"away":0},"Paco":{"home":2,"away":1},"Pau":{"home":2,"away":1},"Pepe":{"home":3,"away":0},"Santi":{"home":4,"away":1},"Steph":{"home":2,"away":0}}},{"match":22,"home":"INGLATERRA","away":"CROACIA","group":"L","predictions":{"Alex":{"home":2,"away":1},"David":{"home":2,"away":1},"Mati":{"home":2,"away":1},"Montse":{"home":2,"away":1},"Paco":{"home":3,"away":2},"Pau":{"home":2,"away":1},"Pepe":{"home":2,"away":1},"Santi":{"home":3,"away":1},"Steph":{"home":2,"away":1}}},{"match":23,"home":"GHANA","away":"PANAMÁ","group":"L","predictions":{"Alex":{"home":1,"away":2},"David":{"home":1,"away":0},"Mati":{"home":3,"away":1},"Montse":{"home":1,"away":2},"Paco":{"home":2,"away":0},"Pau":{"home":3,"away":0},"Pepe":{"home":1,"away":0},"Santi":{"home":3,"away":0},"Steph":{"home":1,"away":0}}},{"match":24,"home":"UZBEKISTÁN","away":"COLOMBIA","group":"K","predictions":{"Alex":{"home":0,"away":2},"David":{"home":0,"away":2},"Mati":{"home":0,"away":3},"Montse":{"home":0,"away":2},"Paco":{"home":1,"away":2},"Pau":{"home":0,"away":2},"Pepe":{"home":0,"away":2},"Santi":{"home":0,"away":3},"Steph":{"home":0,"away":2}}},{"match":25,"home":"REP. CHECA","away":"SUDÁFRICA","group":"A","predictions":{"Alex":{"home":1,"away":1},"David":{"home":1,"away":1},"Mati":{"home":0,"away":0},"Montse":{"home":1,"away":2},"Paco":{"home":2,"away":0},"Pau":{"home":2,"away":0},"Pepe":{"home":2,"away":0},"Santi":{"home":1,"away":1},"Steph":{"home":1,"away":1}}},{"match":26,"home":"SUIZA","away":"BOSNIA y HERZEG.","group":"B","predictions":{"Alex":{"home":2,"away":1},"David":{"home":2,"away":0},"Mati":{"home":2,"away":1},"Montse":{"home":2,"away":1},"Paco":{"home":1,"away":0},"Pau":{"home":2,"away":1},"Pepe":{"home":1,"away":0},"Santi":{"home":3,"away":1},"Steph":{"home":2,"away":1}}},{"match":27,"home":"CANADÁ","away":"CATAR","group":"B","predictions":{"Alex":{"home":2,"away":1},"David":{"home":2,"away":1},"Mati":{"home":2,"away":0},"Montse":{"home":2,"away":1},"Paco":{"home":2,"away":2},"Pau":{"home":2,"away":0},"Pepe":{"home":2,"away":1},"Santi":{"home":1,"away":0},"Steph":{"home":2,"away":0}}},{"match":28,"home":"MÉXICO","away":"COREA del SUR","group":"A","predictions":{"Alex":{"home":1,"away":1},"David":{"home":1,"away":1},"Mati":{"home":1,"away":2},"Montse":{"home":1,"away":2},"Paco":{"home":1,"away":3},"Pau":{"home":2,"away":1},"Pepe":{"home":3,"away":1},"Santi":{"home":1,"away":3},"Steph":{"home":1,"away":1}}},{"match":29,"home":"ESTADOS UNIDOS","away":"AUSTRALIA","group":"D","predictions":{"Alex":{"home":2,"away":1},"David":{"home":2,"away":1},"Mati":{"home":2,"away":0},"Montse":{"home":1,"away":2},"Paco":{"home":4,"away":1},"Pau":{"home":2,"away":0},"Pepe":{"home":2,"away":0},"Santi":{"home":1,"away":2},"Steph":{"home":2,"away":1}}},{"match":30,"home":"ESCOCIA","away":"MARRUECOS","group":"C","predictions":{"Alex":{"home":3,"away":1},"David":{"home":1,"away":1},"Mati":{"home":1,"away":3},"Montse":{"home":2,"away":1},"Paco":{"home":0,"away":3},"Pau":{"home":1,"away":1},"Pepe":{"home":1,"away":2},"Santi":{"home":1,"away":3},"Steph":{"home":1,"away":2}}},{"match":31,"home":"BRASIL","away":"HAITÍ","group":"C","predictions":{"Alex":{"home":4,"away":0},"David":{"home":3,"away":0},"Mati":{"home":3,"away":0},"Montse":{"home":3,"away":0},"Paco":{"home":5,"away":1},"Pau":{"home":4,"away":0},"Pepe":{"home":4,"away":0},"Santi":{"home":4,"away":0},"Steph":{"home":3,"away":0}}},{"match":32,"home":"TURQUÍA","away":"PARAGUAY","group":"D","predictions":{"Alex":{"home":0,"away":2},"David":{"home":1,"away":1},"Mati":{"home":1,"away":2},"Montse":{"home":1,"away":2},"Paco":{"home":2,"away":2},"Pau":{"home":1,"away":1},"Pepe":{"home":1,"away":1},"Santi":{"home":2,"away":3},"Steph":{"home":2,"away":1}}},{"match":33,"home":"PAÍSES BAJOS","away":"SUECIA","group":"F","predictions":{"Alex":{"home":2,"away":0},"David":{"home":2,"away":1},"Mati":{"home":2,"away":0},"Montse":{"home":2,"away":1},"Paco":{"home":2,"away":1},"Pau":{"home":2,"away":1},"Pepe":{"home":2,"away":2},"Santi":{"home":2,"away":2},"Steph":{"home":2,"away":1}}},{"match":34,"home":"ALEMANIA","away":"COSTA de MARFIL","group":"E","predictions":{"Alex":{"home":4,"away":0},"David":{"home":2,"away":1},"Mati":{"home":3,"away":1},"Montse":{"home":3,"away":0},"Paco":{"home":3,"away":2},"Pau":{"home":2,"away":0},"Pepe":{"home":3,"away":1},"Santi":{"home":3,"away":1},"Steph":{"home":2,"away":1}}},{"match":35,"home":"ECUADOR","away":"CURAZAO","group":"E","predictions":{"Alex":{"home":2,"away":0},"David":{"home":2,"away":0},"Mati":{"home":3,"away":0},"Montse":{"home":1,"away":0},"Paco":{"home":2,"away":0},"Pau":{"home":2,"away":0},"Pepe":{"home":1,"away":0},"Santi":{"home":3,"away":1},"Steph":{"home":2,"away":0}}},{"match":36,"home":"TÚNEZ","away":"JAPÓN","group":"F","predictions":{"Alex":{"home":1,"away":2},"David":{"home":0,"away":1},"Mati":{"home":0,"away":2},"Montse":{"home":0,"away":3},"Paco":{"home":0,"away":2},"Pau":{"home":1,"away":2},"Pepe":{"home":1,"away":2},"Santi":{"home":1,"away":2},"Steph":{"home":0,"away":2}}},{"match":37,"home":"ESPAÑA","away":"ARABIA SAUDITA","group":"H","predictions":{"Alex":{"home":3,"away":1},"David":{"home":3,"away":0},"Mati":{"home":2,"away":0},"Montse":{"home":3,"away":0},"Paco":{"home":3,"away":0},"Pau":{"home":2,"away":0},"Pepe":{"home":3,"away":1},"Santi":{"home":3,"away":0},"Steph":{"home":2,"away":0}}},{"match":38,"home":"BÉLGICA","away":"IRÁN","group":"G","predictions":{"Alex":{"home":2,"away":0},"David":{"home":2,"away":1},"Mati":{"home":1,"away":1},"Montse":{"home":1,"away":0},"Paco":{"home":4,"away":1},"Pau":{"home":2,"away":1},"Pepe":{"home":2,"away":1},"Santi":{"home":3,"away":0},"Steph":{"home":2,"away":1}}},{"match":39,"home":"URUGUAY","away":"CABO VERDE","group":"H","predictions":{"Alex":{"home":3,"away":0},"David":{"home":2,"away":0},"Mati":{"home":2,"away":0},"Montse":{"home":2,"away":1},"Paco":{"home":3,"away":0},"Pau":{"home":2,"away":0},"Pepe":{"home":2,"away":0},"Santi":{"home":3,"away":0},"Steph":{"home":2,"away":0}}},{"match":40,"home":"NUEVA ZELANDA","away":"EGIPTO","group":"G","predictions":{"Alex":{"home":1,"away":0},"David":{"home":1,"away":1},"Mati":{"home":2,"away":2},"Montse":{"home":1,"away":0},"Paco":{"home":0,"away":4},"Pau":{"home":1,"away":1},"Pepe":{"home":1,"away":1},"Santi":{"home":1,"away":3},"Steph":{"home":0,"away":2}}},{"match":41,"home":"ARGENTINA","away":"AUSTRIA","group":"J","predictions":{"Alex":{"home":2,"away":0},"David":{"home":2,"away":1},"Mati":{"home":2,"away":1},"Montse":{"home":2,"away":0},"Paco":{"home":3,"away":2},"Pau":{"home":2,"away":0},"Pepe":{"home":3,"away":1},"Santi":{"home":3,"away":0},"Steph":{"home":2,"away":1}}},{"match":42,"home":"FRANCIA","away":"IRAK","group":"I","predictions":{"Alex":{"home":3,"away":0},"David":{"home":3,"away":0},"Mati":{"home":5,"away":0},"Montse":{"home":4,"away":0},"Paco":{"home":3,"away":0},"Pau":{"home":3,"away":0},"Pepe":{"home":3,"away":0},"Santi":{"home":3,"away":0},"Steph":{"home":2,"away":0}}},{"match":43,"home":"NORUEGA","away":"SENEGAL","group":"I","predictions":{"Alex":{"home":1,"away":0},"David":{"home":1,"away":1},"Mati":{"home":1,"away":1},"Montse":{"home":0,"away":1},"Paco":{"home":1,"away":2},"Pau":{"home":1,"away":1},"Pepe":{"home":3,"away":1},"Santi":{"home":2,"away":1},"Steph":{"home":1,"away":1}}},{"match":44,"home":"JORDANIA","away":"ARGELIA","group":"J","predictions":{"Alex":{"home":1,"away":1},"David":{"home":0,"away":2},"Mati":{"home":2,"away":3},"Montse":{"home":0,"away":1},"Paco":{"home":2,"away":2},"Pau":{"home":1,"away":2},"Pepe":{"home":1,"away":1},"Santi":{"home":1,"away":3},"Steph":{"home":0,"away":2}}},{"match":45,"home":"PORTUGAL","away":"UZBEKISTÁN","group":"K","predictions":{"Alex":{"home":3,"away":1},"David":{"home":3,"away":0},"Mati":{"home":3,"away":0},"Montse":{"home":3,"away":0},"Paco":{"home":4,"away":0},"Pau":{"home":3,"away":0},"Pepe":{"home":2,"away":0},"Santi":{"home":3,"away":0},"Steph":{"home":2,"away":0}}},{"match":46,"home":"INGLATERRA","away":"GHANA","group":"L","predictions":{"Alex":{"home":4,"away":0},"David":{"home":2,"away":1},"Mati":{"home":2,"away":0},"Montse":{"home":2,"away":1},"Paco":{"home":3,"away":1},"Pau":{"home":2,"away":0},"Pepe":{"home":1,"away":0},"Santi":{"home":2,"away":1},"Steph":{"home":2,"away":0}}},{"match":47,"home":"PANAMÁ","away":"CROACIA","group":"L","predictions":{"Alex":{"home":0,"away":2},"David":{"home":0,"away":2},"Mati":{"home":0,"away":2},"Montse":{"home":2,"away":3},"Paco":{"home":2,"away":3},"Pau":{"home":1,"away":2},"Pepe":{"home":0,"away":2},"Santi":{"home":0,"away":2},"Steph":{"home":0,"away":2}}},{"match":48,"home":"COLOMBIA","away":"REP. del CONGO","group":"K","predictions":{"Alex":{"home":3,"away":1},"David":{"home":2,"away":0},"Mati":{"home":2,"away":0},"Montse":{"home":3,"away":0},"Paco":{"home":4,"away":0},"Pau":{"home":2,"away":0},"Pepe":{"home":1,"away":1},"Santi":{"home":2,"away":0},"Steph":{"home":2,"away":0}}},{"match":49,"home":"SUIZA","away":"CANADÁ","group":"B","predictions":{"Alex":{"home":1,"away":2},"David":{"home":1,"away":1},"Mati":{"home":1,"away":1},"Montse":{"home":2,"away":1},"Paco":{"home":2,"away":0},"Pau":{"home":1,"away":1},"Pepe":{"home":1,"away":1},"Santi":{"home":2,"away":0},"Steph":{"home":1,"away":1}}},{"match":50,"home":"BOSNIA y HERZEG.","away":"CATAR","group":"B","predictions":{"Alex":{"home":0,"away":2},"David":{"home":2,"away":0},"Mati":{"home":1,"away":0},"Montse":{"home":1,"away":0},"Paco":{"home":0,"away":0},"Pau":{"home":2,"away":1},"Pepe":{"home":1,"away":1},"Santi":{"home":1,"away":1},"Steph":{"home":2,"away":1}}},{"match":51,"home":"ESCOCIA","away":"BRASIL","group":"C","predictions":{"Alex":{"home":1,"away":4},"David":{"home":0,"away":2},"Mati":{"home":2,"away":4},"Montse":{"home":1,"away":2},"Paco":{"home":1,"away":2},"Pau":{"home":0,"away":2},"Pepe":{"home":1,"away":3},"Santi":{"home":0,"away":3},"Steph":{"home":0,"away":2}}},{"match":52,"home":"MARRUECOS","away":"HAITÍ","group":"C","predictions":{"Alex":{"home":2,"away":1},"David":{"home":2,"away":0},"Mati":{"home":2,"away":1},"Montse":{"home":2,"away":0},"Paco":{"home":4,"away":0},"Pau":{"home":2,"away":1},"Pepe":{"home":3,"away":0},"Santi":{"home":3,"away":0},"Steph":{"home":2,"away":0}}},{"match":53,"home":"REP. CHECA","away":"MÉXICO","group":"A","predictions":{"Alex":{"home":1,"away":2},"David":{"home":1,"away":2},"Mati":{"home":0,"away":1},"Montse":{"home":1,"away":2},"Paco":{"home":1,"away":2},"Pau":{"home":1,"away":1},"Pepe":{"home":1,"away":2},"Santi":{"home":1,"away":1},"Steph":{"home":1,"away":2}}},{"match":54,"home":"SUDÁFRICA","away":"COREA del SUR","group":"A","predictions":{"Alex":{"home":0,"away":2},"David":{"home":1,"away":1},"Mati":{"home":1,"away":3},"Montse":{"home":0,"away":3},"Paco":{"home":0,"away":3},"Pau":{"home":1,"away":1},"Pepe":{"home":0,"away":1},"Santi":{"home":0,"away":3},"Steph":{"home":1,"away":2}}},{"match":55,"home":"CURAZAO","away":"COSTA de MARFIL","group":"E","predictions":{"Alex":{"home":1,"away":2},"David":{"home":0,"away":2},"Mati":{"home":0,"away":2},"Montse":{"home":1,"away":0},"Paco":{"home":0,"away":0},"Pau":{"home":0,"away":2},"Pepe":{"home":0,"away":2},"Santi":{"home":0,"away":3},"Steph":{"home":0,"away":2}}},{"match":56,"home":"ECUADOR","away":"ALEMANIA","group":"E","predictions":{"Alex":{"home":0,"away":4},"David":{"home":0,"away":2},"Mati":{"home":2,"away":3},"Montse":{"home":0,"away":2},"Paco":{"home":3,"away":4},"Pau":{"home":1,"away":2},"Pepe":{"home":0,"away":3},"Santi":{"home":1,"away":1},"Steph":{"home":0,"away":1}}},{"match":57,"home":"JAPÓN","away":"SUECIA","group":"F","predictions":{"Alex":{"home":1,"away":2},"David":{"home":1,"away":1},"Mati":{"home":2,"away":2},"Montse":{"home":2,"away":1},"Paco":{"home":3,"away":1},"Pau":{"home":1,"away":1},"Pepe":{"home":1,"away":2},"Santi":{"home":2,"away":1},"Steph":{"home":2,"away":1}}},{"match":58,"home":"TÚNEZ","away":"PAÍSES BAJOS","group":"F","predictions":{"Alex":{"home":1,"away":3},"David":{"home":0,"away":2},"Mati":{"home":0,"away":3},"Montse":{"home":0,"away":2},"Paco":{"home":0,"away":5},"Pau":{"home":0,"away":2},"Pepe":{"home":0,"away":2},"Santi":{"home":0,"away":2},"Steph":{"home":0,"away":2}}},{"match":59,"home":"TURQUÍA","away":"ESTADOS UNIDOS","group":"D","predictions":{"Alex":{"home":1,"away":3},"David":{"home":1,"away":2},"Mati":{"home":0,"away":1},"Montse":{"home":2,"away":1},"Paco":{"home":1,"away":4},"Pau":{"home":1,"away":1},"Pepe":{"home":0,"away":2},"Santi":{"home":1,"away":1},"Steph":{"home":1,"away":1}}},{"match":60,"home":"PARAGUAY","away":"AUSTRALIA","group":"D","predictions":{"Alex":{"home":1,"away":2},"David":{"home":1,"away":1},"Mati":{"home":1,"away":0},"Montse":{"home":1,"away":2},"Paco":{"home":2,"away":1},"Pau":{"home":2,"away":1},"Pepe":{"home":1,"away":0},"Santi":{"home":2,"away":0},"Steph":{"home":1,"away":0}}},{"match":61,"home":"NORUEGA","away":"FRANCIA","group":"I","predictions":{"Alex":{"home":0,"away":3},"David":{"home":0,"away":2},"Mati":{"home":1,"away":3},"Montse":{"home":0,"away":4},"Paco":{"home":2,"away":6},"Pau":{"home":1,"away":2},"Pepe":{"home":1,"away":3},"Santi":{"home":1,"away":3},"Steph":{"home":1,"away":2}}},{"match":62,"home":"SENEGAL","away":"IRAK","group":"I","predictions":{"Alex":{"home":1,"away":2},"David":{"home":2,"away":0},"Mati":{"home":2,"away":1},"Montse":{"home":1,"away":0},"Paco":{"home":2,"away":1},"Pau":{"home":2,"away":0},"Pepe":{"home":1,"away":0},"Santi":{"home":2,"away":0},"Steph":{"home":2,"away":0}}},{"match":63,"home":"CABO VERDE","away":"ARABIA SAUDITA","group":"H","predictions":{"Alex":{"home":1,"away":2},"David":{"home":0,"away":2},"Mati":{"home":1,"away":3},"Montse":{"home":1,"away":0},"Paco":{"home":0,"away":1},"Pau":{"home":1,"away":1},"Pepe":{"home":0,"away":1},"Santi":{"home":1,"away":3},"Steph":{"home":1,"away":1}}},{"match":64,"home":"URUGUAY","away":"ESPAÑA","group":"H","predictions":{"Alex":{"home":1,"away":2},"David":{"home":1,"away":2},"Mati":{"home":1,"away":2},"Montse":{"home":1,"away":2},"Paco":{"home":3,"away":3},"Pau":{"home":1,"away":1},"Pepe":{"home":1,"away":2},"Santi":{"home":2,"away":3},"Steph":{"home":1,"away":1}}},{"match":65,"home":"EGIPTO","away":"IRÁN","group":"G","predictions":{"Alex":{"home":1,"away":1},"David":{"home":1,"away":1},"Mati":{"home":0,"away":1},"Montse":{"home":0,"away":1},"Paco":{"home":0,"away":0},"Pau":{"home":1,"away":1},"Pepe":{"home":1,"away":1},"Santi":{"home":2,"away":1},"Steph":{"home":1,"away":1}}},{"match":66,"home":"NUEVA ZELANDA","away":"BÉLGICA","group":"G","predictions":{"Alex":{"home":1,"away":2},"David":{"home":0,"away":2},"Mati":{"home":0,"away":2},"Montse":{"home":1,"away":2},"Paco":{"home":0,"away":1},"Pau":{"home":0,"away":3},"Pepe":{"home":0,"away":2},"Santi":{"home":0,"away":3},"Steph":{"home":0,"away":2}}},{"match":67,"home":"PANAMÁ","away":"INGLATERRA","group":"L","predictions":{"Alex":{"home":0,"away":2},"David":{"home":0,"away":2},"Mati":{"home":1,"away":5},"Montse":{"home":1,"away":2},"Paco":{"home":2,"away":4},"Pau":{"home":0,"away":3},"Pepe":{"home":0,"away":2},"Santi":{"home":0,"away":3},"Steph":{"home":0,"away":2}}},{"match":68,"home":"CROACIA","away":"GHANA","group":"L","predictions":{"Alex":{"home":2,"away":1},"David":{"home":2,"away":1},"Mati":{"home":1,"away":1},"Montse":{"home":3,"away":1},"Paco":{"home":2,"away":2},"Pau":{"home":2,"away":1},"Pepe":{"home":1,"away":0},"Santi":{"home":2,"away":1},"Steph":{"home":2,"away":1}}},{"match":69,"home":"COLOMBIA","away":"PORTUGAL","group":"K","predictions":{"Alex":{"home":1,"away":2},"David":{"home":1,"away":1},"Mati":{"home":1,"away":2},"Montse":{"home":2,"away":1},"Paco":{"home":3,"away":2},"Pau":{"home":1,"away":2},"Pepe":{"home":0,"away":2},"Santi":{"home":3,"away":3},"Steph":{"home":1,"away":1}}},{"match":70,"home":"REP. del CONGO","away":"UZBEKISTÁN","group":"K","predictions":{"Alex":{"home":0,"away":1},"David":{"home":0,"away":1},"Mati":{"home":1,"away":0},"Montse":{"home":0,"away":1},"Paco":{"home":0,"away":0},"Pau":{"home":1,"away":1},"Pepe":{"home":0,"away":0},"Santi":{"home":2,"away":1},"Steph":{"home":1,"away":1}}},{"match":71,"home":"ARGELIA","away":"AUSTRIA","group":"J","predictions":{"Alex":{"home":1,"away":2},"David":{"home":2,"away":0},"Mati":{"home":1,"away":0},"Montse":{"home":1,"away":2},"Paco":{"home":1,"away":3},"Pau":{"home":1,"away":1},"Pepe":{"home":0,"away":2},"Santi":{"home":1,"away":2},"Steph":{"home":1,"away":1}}},{"match":72,"home":"JORDANIA","away":"ARGENTINA","group":"J","predictions":{"Alex":{"home":0,"away":3},"David":{"home":0,"away":2},"Mati":{"home":0,"away":2},"Montse":{"home":0,"away":3},"Paco":{"home":2,"away":1},"Pau":{"home":1,"away":2},"Pepe":{"home":0,"away":3},"Santi":{"home":0,"away":3},"Steph":{"home":0,"away":2}}}];
+
+const GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+
+// Load/save results from localStorage
+function loadResults() {
+  try { return JSON.parse(localStorage.getItem('prode_results') || '{}'); } catch(e) { return {}; }
+}
+function saveResults(results) {
+  localStorage.setItem('prode_results', JSON.stringify(results));
+}
+
+let results = loadResults();
+let activeGroup = 'all';
+let selectedPlayer = null;
+
+function getResult(matchNum) {
+  return results[matchNum] || null;
+}
+
+function getOutcome(h, a) {
+  if (h > a) return 'H';
+  if (a > h) return 'A';
+  return 'D';
+}
+
+function calcPoints(pred, actual) {
+  if (!actual) return null;
+  if (pred.home === actual.home && pred.away === actual.away) return 2;
+  if (getOutcome(pred.home, pred.away) === getOutcome(actual.home, actual.away)) return 1;
+  return 0;
+}
+
+function calcPlayerStats(player) {
+  let pts = 0, exact = 0, result = 0, played = 0;
+  for (const m of MATCHES) {
+    const actual = getResult(m.match);
+    if (!actual) continue;
+    played++;
+    const pred = m.predictions[player];
+    const p = calcPoints(pred, actual);
+    pts += p;
+    if (p === 2) exact++;
+    else if (p === 1) result++;
+  }
+  return { pts, exact, result, played };
+}
+
+// --- STANDINGS ---
+function renderStandings() {
+  const stats = PLAYERS.map(p => ({ name: p, ...calcPlayerStats(p) }));
+  stats.sort((a, b) => b.pts - a.pts || b.exact - a.exact || b.result - a.result);
+
+  const body = document.getElementById('lb-body');
+  body.innerHTML = stats.map((s, i) => {
+    const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+    const rankIcon = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+    const pct = MATCHES.length > 0 ? (s.played / MATCHES.length * 100).toFixed(0) : 0;
+    return `<div class="lb-row">
+      <div class="lb-rank ${rankClass}">${rankIcon}</div>
+      <div>
+        <div class="lb-name">${s.name}</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div class="lb-pts">${s.pts}</div>
+      <div class="lb-exact">${s.exact}</div>
+      <div class="lb-result">${s.result}</div>
+      <div class="lb-played class="h-played"">${s.played}/${MATCHES.length}</div>
+    </div>`;
+  }).join('');
+}
+
+// --- MATCHES ---
+function renderGroupFilters() {
+  const bar = document.getElementById('group-filters');
+  bar.innerHTML = `<button class="filter-btn ${activeGroup==='all'?'active':''}" onclick="filterGroup('all',this)">Todos</button>` +
+    GROUPS.map(g => `<button class="filter-btn ${activeGroup===g?'active':''}" onclick="filterGroup('${g}',this)">Grupo ${g}</button>`).join('');
+}
+
+function filterGroup(g, btn) {
+  activeGroup = g;
+  renderGroupFilters();
+  renderMatches();
+}
+
+function renderMatches() {
+  const container = document.getElementById('matches-container');
+  const groups = activeGroup === 'all' ? GROUPS : [activeGroup];
+  container.innerHTML = groups.map(g => {
+    const gMatches = MATCHES.filter(m => m.group === g);
+    return `<div class="group-section">
+      <div class="group-title">
+        <div class="group-badge">${g}</div>
+        <h2>Grupo ${g}</h2>
+      </div>
+      ${gMatches.map(m => renderMatchCard(m)).join('')}
+    </div>`;
+  }).join('');
+}
+
+function renderMatchCard(m) {
+  const actual = getResult(m.match);
+  const isPlayed = !!actual;
+  const scoreDisplay = isPlayed
+    ? `<div class="match-result-display">${actual.home} - ${actual.away}</div>`
+    : `<div class="result-container">
+        <input class="score-input" type="number" min="0" max="20" placeholder="-"
+          value="${actual ? actual.home : ''}"
+          oninput="updateScore(${m.match}, 'home', this.value)"
+          onchange="saveScore(${m.match})" id="h${m.match}">
+        <span class="score-sep">-</span>
+        <input class="score-input" type="number" min="0" max="20" placeholder="-"
+          value="${actual ? actual.away : ''}"
+          oninput="updateScore(${m.match}, 'away', this.value)"
+          onchange="saveScore(${m.match})" id="a${m.match}">
+       </div>`;
+
+  const predRows = PLAYERS.map(p => {
+    const pred = m.predictions[p];
+    const pts = calcPoints(pred, actual);
+    const cls = pts === null ? '' : pts === 2 ? 'pts-2' : pts === 1 ? 'pts-1' : 'pts-0';
+    const ptsLabel = pts === null ? '' : pts === 2 ? '✅ +2' : pts === 1 ? '🟡 +1' : '❌ 0';
+    return `<div class="pred-cell ${cls}">
+      <div class="pred-player">${p}</div>
+      <div class="pred-score">${pred.home} - ${pred.away}</div>
+      <div class="pred-pts">${ptsLabel}</div>
+    </div>`;
+  }).join('');
+
+  const statusClass = isPlayed ? 'played' : 'pending';
+  const statusText = isPlayed ? '✓ Jugado' : 'Pendiente';
+
+  return `<div class="match-card" id="mc${m.match}">
+    <div class="match-header" onclick="togglePreds(${m.match})">
+      <div class="match-num">${m.match}</div>
+      <div class="team-home">${m.home}</div>
+      ${isPlayed
+        ? `<div class="score-area">${scoreDisplay}</div>`
+        : `<div class="score-area">
+            <input class="score-input" type="number" min="0" max="20" placeholder="-"
+              value="" id="h${m.match}"
+              onclick="event.stopPropagation()"
+              onchange="saveScore(${m.match})">
+            <span class="score-sep">-</span>
+            <input class="score-input" type="number" min="0" max="20" placeholder="-"
+              value="" id="a${m.match}"
+              onclick="event.stopPropagation()"
+              onchange="saveScore(${m.match})">
+           </div>`
+      }
+      <div class="team-away">${m.away}</div>
+      <span class="chevron" id="chev${m.match}">▼</span>
+    </div>
+    <div class="predictions-panel" id="pp${m.match}">
+      <div class="pred-grid">${predRows}</div>
+    </div>
+  </div>`;
+}
+
+function togglePreds(matchNum) {
+  const panel = document.getElementById(`pp${matchNum}`);
+  const chev = document.getElementById(`chev${matchNum}`);
+  const open = panel.classList.toggle('open');
+  chev.classList.toggle('open', open);
+}
+
+function saveScore(matchNum) {
+  const hEl = document.getElementById(`h${matchNum}`);
+  const aEl = document.getElementById(`a${matchNum}`);
+  if (!hEl || !aEl) return;
+  const h = hEl.value.trim();
+  const a = aEl.value.trim();
+  if (h !== '' && a !== '') {
+    results[matchNum] = { home: parseInt(h), away: parseInt(a) };
+  } else {
+    delete results[matchNum];
+  }
+  saveResults(results);
+  refresh();
+}
+
+function updateScore() {}
+
+// --- PLAYERS ---
+function renderPlayers() {
+  const grid = document.getElementById('player-grid');
+  const stats = PLAYERS.map(p => ({ name: p, ...calcPlayerStats(p) }));
+  stats.sort((a,b) => b.pts - a.pts);
+
+  grid.innerHTML = stats.map(s => `
+    <div class="player-card ${selectedPlayer===s.name?'selected':''}" onclick="selectPlayer('${s.name}')">
+      <div class="p-name">${s.name}</div>
+      <div class="p-pts">${s.pts} <span style="font-size:0.9rem;color:var(--muted)">pts</span></div>
+      <div class="p-stats">✅ ${s.exact} exactos &nbsp; 🟡 ${s.result} resultados</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${s.played/MATCHES.length*100}%"></div></div>
+    </div>`).join('');
+
+  if (selectedPlayer) renderPlayerDetail(selectedPlayer);
+}
+
+function selectPlayer(name) {
+  selectedPlayer = selectedPlayer === name ? null : name;
+  renderPlayers();
+}
+
+function renderPlayerDetail(name) {
+  const detail = document.getElementById('player-detail');
+  const rows = MATCHES.map(m => {
+    const pred = m.predictions[name];
+    const actual = getResult(m.match);
+    const pts = calcPoints(pred, actual);
+    const ptsBadge = pts === null ? `<span class="badge-p">-</span>` :
+      pts === 2 ? `<span class="badge-2">+2</span>` :
+      pts === 1 ? `<span class="badge-1">+1</span>` :
+      `<span class="badge-0">0</span>`;
+    const actualStr = actual ? `${actual.home}-${actual.away}` : '-';
+    return `<div class="pm-row">
+      <div style="text-align:center;color:var(--muted);font-size:0.75rem">${m.match}</div>
+      <div style="text-align:right;font-size:0.82rem">${m.home}</div>
+      <div class="pm-pred">${pred.home}-${pred.away}</div>
+      <div style="text-align:left;font-size:0.82rem">${m.away}</div>
+      <div class="pm-pts">${ptsBadge}</div>
+      <div style="text-align:center;font-size:0.82rem;color:var(--muted)">${actualStr}</div>
+    </div>`;
+  }).join('');
+
+  const stats = calcPlayerStats(name);
+  detail.innerHTML = `
+    <div class="player-matches">
+      <div class="pm-row header">
+        <div>#</div><div style="text-align:right">Local</div>
+        <div style="text-align:center">Pred.</div>
+        <div>Visitante</div>
+        <div style="text-align:center">Pts</div>
+        <div style="text-align:center">Real</div>
+      </div>
+      ${rows}
+    </div>`;
+}
+
+function refresh() {
+  renderStandings();
+  renderMatches();
+  if (document.getElementById('tab-players').classList.contains('active')) renderPlayers();
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', ['standings','matches','players'][i]===name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+  if (name === 'matches') { renderGroupFilters(); renderMatches(); }
+  if (name === 'players') renderPlayers();
+}
+
+// --- SYNC with ESPN API ---
+
+// Map ESPN English team names (normalized, no accents) → key matching Spanish names
+const ESPN_TO_KEY = {
+  'mexico': 'mexico', 'south africa': 'sudafrica', 'south korea': 'corea del sur',
+  'czech republic': 'rep checa', 'czechia': 'rep checa',
+  'canada': 'canada',
+  'bosnia-herzegovina': 'bosnia', 'bosnia and herzegovina': 'bosnia', 'bosnia herzegovina': 'bosnia',
+  'united states': 'estados unidos', 'usa': 'estados unidos', 'paraguay': 'paraguay',
+  'qatar': 'catar', 'switzerland': 'suiza', 'brazil': 'brasil', 'morocco': 'marruecos',
+  'haiti': 'haiti', 'scotland': 'escocia', 'australia': 'australia',
+  'turkey': 'turquia', 'turkiye': 'turquia', 'türkiye': 'turquia',
+  'germany': 'alemania',
+  'curacao': 'curazao', 'curaçao': 'curazao',
+  'netherlands': 'paises bajos', 'japan': 'japon',
+  "cote d'ivoire": 'costa de marfil', 'ivory coast': 'costa de marfil',
+  "cote divoire": 'costa de marfil',
+  'ecuador': 'ecuador', 'sweden': 'suecia', 'tunisia': 'tunez',
+  'spain': 'espana', 'belgium': 'belgica', 'saudi arabia': 'arabia saudita',
+  'iran': 'iran', 'new zealand': 'nueva zelanda', 'france': 'francia',
+  'senegal': 'senegal', 'iraq': 'irak', 'norway': 'noruega',
+  'argentina': 'argentina', 'algeria': 'argelia', 'austria': 'austria',
+  'jordan': 'jordania', 'portugal': 'portugal',
+  'republic of the congo': 'rep del congo', 'congo': 'rep del congo',
+  'dr congo': 'rep del congo', 'democratic republic of the congo': 'rep del congo',
+  'england': 'inglaterra', 'croatia': 'croacia', 'ghana': 'ghana',
+  'panama': 'panama', 'uzbekistan': 'uzbekistan', 'colombia': 'colombia',
+  'cape verde': 'cabo verde', 'egypt': 'egipto', 'uruguay': 'uruguay',
+};
+
+function stripAccents(s) {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+// Normalize an ESPN English team name to a lookup key
+function normalizeESPN(name) {
+  if (!name) return '';
+  return ESPN_TO_KEY[stripAccents(name.toLowerCase().trim())] || stripAccents(name.toLowerCase().trim());
+}
+
+// Normalize a Spanish team name (from MATCHES) to the same key space
+function normalizeSpanish(name) {
+  if (!name) return '';
+  let n = stripAccents(name.toLowerCase().trim());
+  n = n.replace(/^rep\. del /, 'rep del ').replace(/^rep\. /, 'rep ');
+  n = n.replace(/bosnia y herzeg\.?/, 'bosnia');
+  n = n.replace(/\bcorea del sur\b/, 'corea del sur');
+  n = n.replace(/\bpaises bajos\b/, 'paises bajos');
+  n = n.replace(/\bcosta de marfil\b/, 'costa de marfil');
+  return n;
+}
+
+// Build lookup: "homeKey|awayKey" → match number
+const MATCH_LOOKUP = (() => {
+  const lkp = {};
+  for (const m of MATCHES) {
+    lkp[normalizeSpanish(m.home) + '|' + normalizeSpanish(m.away)] = m.match;
+  }
+  return lkp;
+})();
+
+function findMatchByTeams(homeESPN, awayESPN) {
+  const hk = normalizeESPN(homeESPN);
+  const ak = normalizeESPN(awayESPN);
+  return MATCH_LOOKUP[hk + '|' + ak] || null;
+}
+
+async function fetchDateScores(dateStr) {
+  const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${dateStr}`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  const data = await res.json();
+  const found = [];
+  for (const ev of data.events || []) {
+    const comps = ev.competitions?.[0]?.competitors || [];
+    if (comps.length < 2) continue;
+    const completed = ev.competitions[0].status?.type?.completed === true;
+    if (!completed) continue;
+    const home = comps[0]?.team?.displayName || '';
+    const away = comps[1]?.team?.displayName || '';
+    const hs = parseInt(comps[0]?.score);
+    const as_ = parseInt(comps[1]?.score);
+    if (isNaN(hs) || isNaN(as_)) continue;
+    found.push({ home, away, hs, as_ });
+  }
+  return found;
+}
+
+async function syncResults() {
+  const btn = document.getElementById('sync-btn');
+  const statusEl = document.getElementById('sync-status');
+  btn.disabled = true;
+  btn.textContent = '⏳ Sincronizando...';
+  statusEl.textContent = 'Buscando resultados...';
+
+  const start = new Date('2026-06-11T00:00:00Z');
+  const today = new Date();
+  const dates = [];
+  for (let d = new Date(start); d <= today; d.setUTCDate(d.getUTCDate() + 1)) {
+    dates.push(d.toISOString().slice(0,10).replace(/-/g,''));
+  }
+
+  let updated = 0, unmatched = [];
+  for (const dateStr of dates) {
+    try {
+      const found = await fetchDateScores(dateStr);
+      for (const { home, away, hs, as_ } of found) {
+        const mn = findMatchByTeams(home, away);
+        if (mn) {
+          results[mn] = { home: hs, away: as_ };
+          updated++;
+        } else {
+          unmatched.push(`${home} vs ${away}`);
+        }
+      }
+    } catch(e) {
+      console.warn('Fetch error for', dateStr, e.message);
+    }
+  }
+
+  if (unmatched.length) console.warn('Sin mapeo:', unmatched);
+  saveResults(results);
+  refresh();
+  localStorage.setItem('prode_last_sync', Date.now());
+
+  const t = new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+  statusEl.textContent = `Sync: ${t} · ${updated} resultados`;
+  btn.disabled = false;
+  btn.textContent = '🔄 Sincronizar resultados';
+}
+
+// Auto-sync always on page load
+window.addEventListener('load', () => syncResults());
+
+// Init
+renderStandings();
+renderGroupFilters();
+renderMatches();
+</script>
+</body>
+</html>
