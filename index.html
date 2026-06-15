@@ -8,23 +8,28 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:      #090909;
-    --surface: #111111;
-    --surface2:#1a1a1a;
-    --border:  #222222;
-    --text:    #ffffff;
-    --muted:   #666666;
-    /* FWC 2026 signature neons */
-    --coral:   #FF4D6D;
-    --teal:    #00E5CC;
-    --violet:  #A855F7;
-    --lime:    #AAFF00;
+    --bg:      #f5f5f0;
+    --surface: #ffffff;
+    --surface2:#f0efea;
+    --border:  #d8d6cf;
+    --text:    #111111;
+    --muted:   #777777;
+    /* FWC 2026 signature neons – darkened for light-bg legibility */
+    --coral:   #D6193C;
+    --teal:    #007A6E;
+    --violet:  #7B2CC0;
+    --lime:    #5E9B00;
+    /* bright neon versions for borders/shadows/backgrounds */
+    --lime-neon:  #AAFF00;
+    --teal-neon:  #00E5CC;
+    --coral-neon: #FF4D6D;
+    --violet-neon:#A855F7;
     /* group color aliases for JS interpolation */
-    --gc0: #AAFF00;
-    --gc1: #00E5CC;
-    --gc2: #FF4D6D;
-    --gc3: #A855F7;
-    --gold:    #FFD060;
+    --gc0: #5E9B00;
+    --gc1: #007A6E;
+    --gc2: #D6193C;
+    --gc3: #7B2CC0;
+    --gold:    #B07800;
     /* scoring */
     --exact:   var(--lime);
     --result:  var(--teal);
@@ -40,8 +45,8 @@
 
   /* ── HEADER ── */
   header {
-    background: #000;
-    border-bottom: 3px solid #fff;
+    background: #fff;
+    border-bottom: 3px solid #111;
     padding: 0 24px;
     display: flex; align-items: stretch; gap: 0;
     position: relative; overflow: hidden;
@@ -50,7 +55,7 @@
     position: absolute; right: 0; top: -10px;
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 14rem; font-weight: 900; line-height: 1;
-    color: #ffffff08; pointer-events: none; user-select: none;
+    color: #00000008; pointer-events: none; user-select: none;
     letter-spacing: -8px;
   }
   .header-left {
@@ -76,7 +81,7 @@
   }
   .sync-btn {
     padding: 9px 18px;
-    background: #000; border: 2px solid var(--teal); border-radius: 2px;
+    background: #fff; border: 2px solid var(--teal); border-radius: 2px;
     color: var(--teal); font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700; font-size: 0.9rem; letter-spacing: 1px;
     text-transform: uppercase; cursor: pointer;
@@ -102,8 +107,8 @@
     cursor: pointer; border-bottom: 3px solid transparent;
     margin-bottom: -2px; transition: all 0.15s;
   }
-  .tab-btn.active { color: #fff; border-bottom-color: var(--lime); }
-  .tab-btn:hover:not(.active) { color: #ddd; }
+  .tab-btn.active { color: var(--text); border-bottom-color: var(--lime-neon); }
+  .tab-btn:hover:not(.active) { color: #333; }
   .tab-panel { display: none; }
   .tab-panel.active { display: block; }
 
@@ -111,7 +116,7 @@
   .leaderboard { background: var(--surface); border: 2px solid var(--border); border-radius: 0; overflow: hidden; }
   .leaderboard-header {
     padding: 12px 20px;
-    background: #000;
+    background: var(--surface2);
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 0.75rem; font-weight: 700; color: var(--muted);
     text-transform: uppercase; letter-spacing: 2px;
@@ -125,9 +130,9 @@
   }
   .lb-row:last-child { border-bottom: none; }
   .lb-row:hover { background: var(--surface2); }
-  .lb-row.rank-1 { border-left: 4px solid var(--lime); }
-  .lb-row.rank-2 { border-left: 4px solid var(--teal); }
-  .lb-row.rank-3 { border-left: 4px solid var(--coral); }
+  .lb-row.rank-1 { border-left: 4px solid var(--lime-neon); }
+  .lb-row.rank-2 { border-left: 4px solid var(--teal-neon); }
+  .lb-row.rank-3 { border-left: 4px solid var(--coral-neon); }
   .lb-row.rank-other { border-left: 4px solid var(--border); }
 
   .lb-rank {
@@ -152,7 +157,7 @@
   .lb-played { color: var(--muted); font-weight: 600; text-align: center; font-size: 0.9rem; }
 
   .progress-bar { height: 3px; background: var(--border); margin-top: 6px; overflow: hidden; }
-  .progress-fill { height: 100%; background: var(--lime); transition: width 0.5s; }
+  .progress-fill { height: 100%; background: var(--lime-neon); transition: width 0.5s; }
 
   /* ── GROUPS ── */
   .group-section { margin-bottom: 36px; }
@@ -169,10 +174,10 @@
   }
 
   /* Group colors cycling through the 4 neons */
-  .gc-0 { color: var(--lime); border-color: var(--lime); box-shadow: 3px 3px 0 var(--lime); }
-  .gc-1 { color: var(--teal); border-color: var(--teal); box-shadow: 3px 3px 0 var(--teal); }
-  .gc-2 { color: var(--coral); border-color: var(--coral); box-shadow: 3px 3px 0 var(--coral); }
-  .gc-3 { color: var(--violet); border-color: var(--violet); box-shadow: 3px 3px 0 var(--violet); }
+  .gc-0 { color: var(--lime); border-color: var(--lime-neon); box-shadow: 3px 3px 0 var(--lime-neon); }
+  .gc-1 { color: var(--teal); border-color: var(--teal-neon); box-shadow: 3px 3px 0 var(--teal-neon); }
+  .gc-2 { color: var(--coral); border-color: var(--coral-neon); box-shadow: 3px 3px 0 var(--coral-neon); }
+  .gc-3 { color: var(--violet); border-color: var(--violet-neon); box-shadow: 3px 3px 0 var(--violet-neon); }
   .gh-0 { color: var(--lime); }
   .gh-1 { color: var(--teal); }
   .gh-2 { color: var(--coral); }
@@ -206,17 +211,17 @@
   .score-area { display: flex; align-items: center; gap: 6px; justify-content: center; margin: 0 8px; }
   .score-input {
     width: 40px; height: 34px;
-    background: #000; border: 1px solid var(--border);
+    background: var(--surface2); border: 1px solid var(--border);
     color: var(--text); font-size: 1rem; font-weight: 700;
     font-family: 'Barlow Condensed', sans-serif;
     text-align: center; outline: none; border-radius: 0;
     transition: border-color 0.15s;
   }
-  .score-input:focus { border-color: var(--lime); }
+  .score-input:focus { border-color: var(--lime-neon); }
   .score-sep { color: var(--muted); font-weight: 900; font-size: 1.1rem; }
   .match-result-display {
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1.3rem; font-weight: 900; color: #fff;
+    font-size: 1.3rem; font-weight: 900; color: var(--text);
     text-align: center; min-width: 70px; letter-spacing: 2px;
     margin: 0 8px;
   }
@@ -226,14 +231,14 @@
     font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
   }
   .match-status.pending { border: 1px solid var(--border); color: var(--muted); }
-  .match-status.played { border: 1px solid var(--lime); color: var(--lime); }
+  .match-status.played { border: 1px solid var(--lime); color: var(--lime); background: #f0ffe0; }
   .chevron { color: var(--muted); font-size: 0.75rem; transition: transform 0.2s; }
   .chevron.open { transform: rotate(180deg); }
 
   /* ── PREDICTIONS PANEL ── */
   .predictions-panel {
     display: none; padding: 10px 14px 12px;
-    border-top: 1px solid var(--border); background: #000;
+    border-top: 1px solid var(--border); background: var(--surface2);
   }
   .predictions-panel.open { display: block; }
   .pred-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; }
@@ -252,10 +257,10 @@
   }
   .pred-pts { font-size: 0.65rem; margin-top: 3px; font-weight: 700; letter-spacing: 0.5px; }
 
-  .pts-2 { border-color: var(--lime) !important; box-shadow: 2px 2px 0 var(--lime); }
+  .pts-2 { border-color: var(--lime-neon) !important; box-shadow: 2px 2px 0 var(--lime-neon); background: #f5ffe0; }
   .pts-2 .pred-score { color: var(--lime); }
   .pts-2 .pred-pts { color: var(--lime); }
-  .pts-1 { border-color: var(--teal) !important; box-shadow: 2px 2px 0 var(--teal); }
+  .pts-1 { border-color: var(--teal-neon) !important; box-shadow: 2px 2px 0 var(--teal-neon); background: #e8fdf9; }
   .pts-1 .pred-score { color: var(--teal); }
   .pts-1 .pred-pts { color: var(--teal); }
   .pts-0 .pred-pts { color: var(--coral); }
@@ -263,17 +268,17 @@
   /* ── FILTER BAR ── */
   .filter-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
   .filter-btn {
-    padding: 5px 14px; background: #000; border: 1px solid var(--border);
+    padding: 5px 14px; background: var(--surface); border: 1px solid var(--border);
     color: var(--muted); cursor: pointer;
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 0.85rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
     transition: all 0.15s; border-radius: 0;
   }
   .filter-btn.active {
-    background: var(--lime); border-color: var(--lime); color: #000;
-    box-shadow: 3px 3px 0 rgba(170,255,0,0.3);
+    background: var(--lime-neon); border-color: var(--lime-neon); color: #000;
+    box-shadow: 3px 3px 0 rgba(170,255,0,0.5);
   }
-  .filter-btn:hover:not(.active) { border-color: #555; color: #fff; }
+  .filter-btn:hover:not(.active) { border-color: #aaa; color: var(--text); }
 
   /* ── PLAYER VIEW ── */
   .player-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-bottom: 24px; }
@@ -282,8 +287,8 @@
     border-radius: 0; padding: 16px; cursor: pointer;
     transition: all 0.15s; text-align: center; position: relative;
   }
-  .player-card:hover { border-color: #555; box-shadow: 4px 4px 0 var(--teal); }
-  .player-card.selected { border-color: var(--lime); box-shadow: 4px 4px 0 var(--lime); }
+  .player-card:hover { border-color: #aaa; box-shadow: 4px 4px 0 var(--teal-neon); }
+  .player-card.selected { border-color: var(--lime-neon); box-shadow: 4px 4px 0 var(--lime-neon); }
   .p-name {
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 1.2rem; font-weight: 900; text-transform: uppercase;
@@ -307,7 +312,7 @@
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 0.7rem; color: var(--muted); font-weight: 700;
     text-transform: uppercase; letter-spacing: 1px;
-    background: #000; padding: 10px 14px;
+    background: var(--surface2); padding: 10px 14px;
   }
   .pm-pts { text-align: center; font-weight: 800; }
   .pm-pred {
@@ -315,9 +320,9 @@
     text-align: center; font-weight: 800; font-size: 1rem; letter-spacing: 2px;
   }
 
-  .badge-2 { display:inline-block; background: rgba(170,255,0,.15); color: var(--lime); padding: 3px 10px; border: 1px solid var(--lime); font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.85rem; }
-  .badge-1 { display:inline-block; background: rgba(0,229,204,.12); color: var(--teal); padding: 3px 10px; border: 1px solid var(--teal); font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.85rem; }
-  .badge-0 { display:inline-block; background: rgba(255,77,109,.12); color: var(--coral); padding: 3px 10px; border: 1px solid var(--coral); font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.85rem; }
+  .badge-2 { display:inline-block; background: #edffc0; color: var(--lime); padding: 3px 10px; border: 1px solid var(--lime-neon); font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.85rem; }
+  .badge-1 { display:inline-block; background: #d4faf5; color: var(--teal); padding: 3px 10px; border: 1px solid var(--teal-neon); font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.85rem; }
+  .badge-0 { display:inline-block; background: #fde8ec; color: var(--coral); padding: 3px 10px; border: 1px solid var(--coral-neon); font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.85rem; }
   .badge-p { display:inline-block; background: var(--surface2); color: var(--muted); padding: 3px 10px; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:0.85rem; }
 
   .legend {
@@ -328,6 +333,12 @@
   .legend .l2 { color: var(--lime); }
   .legend .l1 { color: var(--teal); }
   .legend .l0 { color: var(--coral); }
+
+  .match-when {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.68rem; color: var(--muted); letter-spacing: 0.5px;
+    white-space: nowrap; text-transform: uppercase;
+  }
 
   @media (max-width: 768px) {
     .header-deco { font-size: 8rem; }
@@ -403,6 +414,44 @@ const PLAYERS = ['Alex','David','Mati','Montse','Paco','Pau','Pepe','Santi','Ste
 const MATCHES = [{"match":1,"home":"MÉXICO","away":"SUDÁFRICA","group":"A","predictions":{"Alex":{"home":2,"away":0},"David":{"home":2,"away":1},"Mati":{"home":2,"away":1},"Montse":{"home":1,"away":0},"Paco":{"home":2,"away":1},"Pau":{"home":2,"away":0},"Pepe":{"home":2,"away":1},"Santi":{"home":2,"away":1},"Steph":{"home":2,"away":0}}},{"match":2,"home":"COREA del SUR","away":"REP. CHECA","group":"A","predictions":{"Alex":{"home":1,"away":0},"David":{"home":1,"away":1},"Mati":{"home":2,"away":0},"Montse":{"home":2,"away":0},"Paco":{"home":2,"away":0},"Pau":{"home":1,"away":1},"Pepe":{"home":1,"away":1},"Santi":{"home":3,"away":1},"Steph":{"home":1,"away":0}}},{"match":3,"home":"CANADÁ","away":"BOSNIA Y HERZEG.","group":"B","predictions":{"Alex":{"home":1,"away":0},"David":{"home":1,"away":2},"Mati":{"home":1,"away":1},"Montse":{"home":1,"away":1},"Paco":{"home":1,"away":1},"Pau":{"home":1,"away":1},"Pepe":{"home":1,"away":0},"Santi":{"home":1,"away":0},"Steph":{"home":2,"away":1}}},{"match":4,"home":"ESTADOS UNIDOS","away":"PARAGUAY","group":"D","predictions":{"Alex":{"home":2,"away":1},"David":{"home":2,"away":0},"Mati":{"home":2,"away":1},"Montse":{"home":2,"away":2},"Paco":{"home":3,"away":0},"Pau":{"home":2,"away":1},"Pepe":{"home":2,"away":1},"Santi":{"home":1,"away":2},"Steph":{"home":1,"away":1}}},{"match":5,"home":"CATAR","away":"SUIZA","group":"B","predictions":{"Alex":{"home":0,"away":2},"David":{"home":0,"away":1},"Mati":{"home":0,"away":3},"Montse":{"home":1,"away":2},"Paco":{"home":2,"away":2},"Pau":{"home":0,"away":2},"Pepe":{"home":0,"away":2},"Santi":{"home":1,"away":3},"Steph":{"home":0,"away":2}}},{"match":6,"home":"BRASIL","away":"MARRUECOS","group":"C","predictions":{"Alex":{"home":3,"away":0},"David":{"home":2,"away":0},"Mati":{"home":2,"away":1},"Montse":{"home":3,"away":1},"Paco":{"home":4,"away":1},"Pau":{"home":2,"away":1},"Pepe":{"home":2,"away":1},"Santi":{"home":3,"away":1},"Steph":{"home":2,"away":1}}},{"match":7,"home":"HAITÍ","away":"ESCOCIA","group":"C","predictions":{"Alex":{"home":0,"away":2},"David":{"home":0,"away":2},"Mati":{"home":1,"away":2},"Montse":{"home":0,"away":1},"Paco":{"home":0,"away":3},"Pau":{"home":1,"away":2},"Pepe":{"home":0,"away":2},"Santi":{"home":0,"away":2},"Steph":{"home":0,"away":1}}},{"match":8,"home":"AUSTRALIA","away":"TURQUÍA","group":"D","predictions":{"Alex":{"home":0,"away":2},"David":{"home":1,"away":1},"Mati":{"home":1,"away":0},"Montse":{"home":2,"away":1},"Paco":{"home":2,"away":2},"Pau":{"home":1,"away":2},"Pepe":{"home":1,"away":2},"Santi":{"home":1,"away":2},"Steph":{"home":1,"away":2}}},{"match":9,"home":"ALEMANIA","away":"CURAZAO","group":"E","predictions":{"Alex":{"home":4,"away":0},"David":{"home":3,"away":0},"Mati":{"home":7,"away":0},"Montse":{"home":2,"away":0},"Paco":{"home":4,"away":0},"Pau":{"home":4,"away":0},"Pepe":{"home":3,"away":0},"Santi":{"home":5,"away":0},"Steph":{"home":3,"away":0}}},{"match":10,"home":"PAÍSES BAJOS","away":"JAPÓN","group":"F","predictions":{"Alex":{"home":3,"away":1},"David":{"home":2,"away":1},"Mati":{"home":2,"away":2},"Montse":{"home":2,"away":3},"Paco":{"home":2,"away":3},"Pau":{"home":2,"away":1},"Pepe":{"home":2,"away":1},"Santi":{"home":1,"away":2},"Steph":{"home":1,"away":1}}},{"match":11,"home":"COSTA de MARFIL","away":"ECUADOR","group":"E","predictions":{"Alex":{"home":1,"away":2},"David":{"home":1,"away":1},"Mati":{"home":0,"away":2},"Montse":{"home":0,"away":1},"Paco":{"home":2,"away":1},"Pau":{"home":1,"away":1},"Pepe":{"home":1,"away":1},"Santi":{"home":1,"away":3},"Steph":{"home":0,"away":0}}},{"match":12,"home":"SUECIA","away":"TÚNEZ","group":"F","predictions":{"Alex":{"home":2,"away":1},"David":{"home":1,"away":0},"Mati":{"home":2,"away":0},"Montse":{"home":1,"away":0},"Paco":{"home":0,"away":0},"Pau":{"home":1,"away":0},"Pepe":{"home":2,"away":0},"Santi":{"home":2,"away":1},"Steph":{"home":2,"away":1}}},{"match":13,"home":"ESPAÑA","away":"CABO VERDE","group":"H","predictions":{"Alex":{"home":3,"away":0},"David":{"home":3,"away":0},"Mati":{"home":4,"away":0},"Montse":{"home":3,"away":0},"Paco":{"home":5,"away":1},"Pau":{"home":3,"away":0},"Pepe":{"home":3,"away":0},"Santi":{"home":6,"away":0},"Steph":{"home":3,"away":0}}},{"match":14,"home":"BÉLGICA","away":"EGIPTO","group":"G","predictions":{"Alex":{"home":2,"away":0},"David":{"home":2,"away":0},"Mati":{"home":3,"away":1},"Montse":{"home":2,"away":1},"Paco":{"home":2,"away":2},"Pau":{"home":2,"away":0},"Pepe":{"home":2,"away":1},"Santi":{"home":3,"away":1},"Steph":{"home":2,"away":1}}},{"match":15,"home":"ARABIA SAUDITA","away":"URUGUAY","group":"H","predictions":{"Alex":{"home":0,"away":3},"David":{"home":0,"away":2},"Mati":{"home":1,"away":3},"Montse":{"home":0,"away":2},"Paco":{"home":1,"away":2},"Pau":{"home":0,"away":2},"Pepe":{"home":0,"away":2},"Santi":{"home":1,"away":2},"Steph":{"home":0,"away":1}}},{"match":16,"home":"IRÁN","away":"NUEVA ZELANDA","group":"G","predictions":{"Alex":{"home":1,"away":2},"David":{"home":1,"away":1},"Mati":{"home":1,"away":0},"Montse":{"home":1,"away":3},"Paco":{"home":3,"away":0},"Pau":{"home":2,"away":0},"Pepe":{"home":1,"away":1},"Santi":{"home":1,"away":1},"Steph":{"home":2,"away":1}}},{"match":17,"home":"FRANCIA","away":"SENEGAL","group":"I","predictions":{"Alex":{"home":2,"away":0},"David":{"home":2,"away":0},"Mati":{"home":3,"away":0},"Montse":{"home":3,"away":0},"Paco":{"home":2,"away":2},"Pau":{"home":2,"away":1},"Pepe":{"home":3,"away":1},"Santi":{"home":3,"away":1},"Steph":{"home":3,"away":1}}},{"match":18,"home":"IRAK","away":"NORUEGA","group":"I","predictions":{"Alex":{"home":0,"away":3},"David":{"home":0,"away":2},"Mati":{"home":0,"away":2},"Montse":{"home":1,"away":0},"Paco":{"home":1,"away":4},"Pau":{"home":0,"away":2},"Pepe":{"home":0,"away":2},"Santi":{"home":1,"away":3},"Steph":{"home":0,"away":2}}},{"match":19,"home":"ARGENTINA","away":"ARGELIA","group":"J","predictions":{"Alex":{"home":3,"away":0},"David":{"home":2,"away":0},"Mati":{"home":2,"away":0},"Montse":{"home":3,"away":1},"Paco":{"home":3,"away":0},"Pau":{"home":2,"away":1},"Pepe":{"home":3,"away":0},"Santi":{"home":3,"away":0},"Steph":{"home":2,"away":0}}},{"match":20,"home":"AUSTRIA","away":"JORDANIA","group":"J","predictions":{"Alex":{"home":1,"away":2},"David":{"home":2,"away":0},"Mati":{"home":1,"away":1},"Montse":{"home":1,"away":0},"Paco":{"home":2,"away":0},"Pau":{"home":2,"away":0},"Pepe":{"home":2,"away":0},"Santi":{"home":2,"away":1},"Steph":{"home":2,"away":0}}},{"match":21,"home":"PORTUGAL","away":"REP. del CONGO","group":"K","predictions":{"Alex":{"home":3,"away":0},"David":{"home":3,"away":0},"Mati":{"home":4,"away":0},"Montse":{"home":2,"away":0},"Paco":{"home":2,"away":1},"Pau":{"home":2,"away":1},"Pepe":{"home":3,"away":0},"Santi":{"home":4,"away":1},"Steph":{"home":2,"away":0}}},{"match":22,"home":"INGLATERRA","away":"CROACIA","group":"L","predictions":{"Alex":{"home":2,"away":1},"David":{"home":2,"away":1},"Mati":{"home":2,"away":1},"Montse":{"home":2,"away":1},"Paco":{"home":3,"away":2},"Pau":{"home":2,"away":1},"Pepe":{"home":2,"away":1},"Santi":{"home":3,"away":1},"Steph":{"home":2,"away":1}}},{"match":23,"home":"GHANA","away":"PANAMÁ","group":"L","predictions":{"Alex":{"home":1,"away":2},"David":{"home":1,"away":0},"Mati":{"home":3,"away":1},"Montse":{"home":1,"away":2},"Paco":{"home":2,"away":0},"Pau":{"home":3,"away":0},"Pepe":{"home":1,"away":0},"Santi":{"home":3,"away":0},"Steph":{"home":1,"away":0}}},{"match":24,"home":"UZBEKISTÁN","away":"COLOMBIA","group":"K","predictions":{"Alex":{"home":0,"away":2},"David":{"home":0,"away":2},"Mati":{"home":0,"away":3},"Montse":{"home":0,"away":2},"Paco":{"home":1,"away":2},"Pau":{"home":0,"away":2},"Pepe":{"home":0,"away":2},"Santi":{"home":0,"away":3},"Steph":{"home":0,"away":2}}},{"match":25,"home":"REP. CHECA","away":"SUDÁFRICA","group":"A","predictions":{"Alex":{"home":1,"away":1},"David":{"home":1,"away":1},"Mati":{"home":0,"away":0},"Montse":{"home":1,"away":2},"Paco":{"home":2,"away":0},"Pau":{"home":2,"away":0},"Pepe":{"home":2,"away":0},"Santi":{"home":1,"away":1},"Steph":{"home":1,"away":1}}},{"match":26,"home":"SUIZA","away":"BOSNIA y HERZEG.","group":"B","predictions":{"Alex":{"home":2,"away":1},"David":{"home":2,"away":0},"Mati":{"home":2,"away":1},"Montse":{"home":2,"away":1},"Paco":{"home":1,"away":0},"Pau":{"home":2,"away":1},"Pepe":{"home":1,"away":0},"Santi":{"home":3,"away":1},"Steph":{"home":2,"away":1}}},{"match":27,"home":"CANADÁ","away":"CATAR","group":"B","predictions":{"Alex":{"home":2,"away":1},"David":{"home":2,"away":1},"Mati":{"home":2,"away":0},"Montse":{"home":2,"away":1},"Paco":{"home":2,"away":2},"Pau":{"home":2,"away":0},"Pepe":{"home":2,"away":1},"Santi":{"home":1,"away":0},"Steph":{"home":2,"away":0}}},{"match":28,"home":"MÉXICO","away":"COREA del SUR","group":"A","predictions":{"Alex":{"home":1,"away":1},"David":{"home":1,"away":1},"Mati":{"home":1,"away":2},"Montse":{"home":1,"away":2},"Paco":{"home":1,"away":3},"Pau":{"home":2,"away":1},"Pepe":{"home":3,"away":1},"Santi":{"home":1,"away":3},"Steph":{"home":1,"away":1}}},{"match":29,"home":"ESTADOS UNIDOS","away":"AUSTRALIA","group":"D","predictions":{"Alex":{"home":2,"away":1},"David":{"home":2,"away":1},"Mati":{"home":2,"away":0},"Montse":{"home":1,"away":2},"Paco":{"home":4,"away":1},"Pau":{"home":2,"away":0},"Pepe":{"home":2,"away":0},"Santi":{"home":1,"away":2},"Steph":{"home":2,"away":1}}},{"match":30,"home":"ESCOCIA","away":"MARRUECOS","group":"C","predictions":{"Alex":{"home":3,"away":1},"David":{"home":1,"away":1},"Mati":{"home":1,"away":3},"Montse":{"home":2,"away":1},"Paco":{"home":0,"away":3},"Pau":{"home":1,"away":1},"Pepe":{"home":1,"away":2},"Santi":{"home":1,"away":3},"Steph":{"home":1,"away":2}}},{"match":31,"home":"BRASIL","away":"HAITÍ","group":"C","predictions":{"Alex":{"home":4,"away":0},"David":{"home":3,"away":0},"Mati":{"home":3,"away":0},"Montse":{"home":3,"away":0},"Paco":{"home":5,"away":1},"Pau":{"home":4,"away":0},"Pepe":{"home":4,"away":0},"Santi":{"home":4,"away":0},"Steph":{"home":3,"away":0}}},{"match":32,"home":"TURQUÍA","away":"PARAGUAY","group":"D","predictions":{"Alex":{"home":0,"away":2},"David":{"home":1,"away":1},"Mati":{"home":1,"away":2},"Montse":{"home":1,"away":2},"Paco":{"home":2,"away":2},"Pau":{"home":1,"away":1},"Pepe":{"home":1,"away":1},"Santi":{"home":2,"away":3},"Steph":{"home":2,"away":1}}},{"match":33,"home":"PAÍSES BAJOS","away":"SUECIA","group":"F","predictions":{"Alex":{"home":2,"away":0},"David":{"home":2,"away":1},"Mati":{"home":2,"away":0},"Montse":{"home":2,"away":1},"Paco":{"home":2,"away":1},"Pau":{"home":2,"away":1},"Pepe":{"home":2,"away":2},"Santi":{"home":2,"away":2},"Steph":{"home":2,"away":1}}},{"match":34,"home":"ALEMANIA","away":"COSTA de MARFIL","group":"E","predictions":{"Alex":{"home":4,"away":0},"David":{"home":2,"away":1},"Mati":{"home":3,"away":1},"Montse":{"home":3,"away":0},"Paco":{"home":3,"away":2},"Pau":{"home":2,"away":0},"Pepe":{"home":3,"away":1},"Santi":{"home":3,"away":1},"Steph":{"home":2,"away":1}}},{"match":35,"home":"ECUADOR","away":"CURAZAO","group":"E","predictions":{"Alex":{"home":2,"away":0},"David":{"home":2,"away":0},"Mati":{"home":3,"away":0},"Montse":{"home":1,"away":0},"Paco":{"home":2,"away":0},"Pau":{"home":2,"away":0},"Pepe":{"home":1,"away":0},"Santi":{"home":3,"away":1},"Steph":{"home":2,"away":0}}},{"match":36,"home":"TÚNEZ","away":"JAPÓN","group":"F","predictions":{"Alex":{"home":1,"away":2},"David":{"home":0,"away":1},"Mati":{"home":0,"away":2},"Montse":{"home":0,"away":3},"Paco":{"home":0,"away":2},"Pau":{"home":1,"away":2},"Pepe":{"home":1,"away":2},"Santi":{"home":1,"away":2},"Steph":{"home":0,"away":2}}},{"match":37,"home":"ESPAÑA","away":"ARABIA SAUDITA","group":"H","predictions":{"Alex":{"home":3,"away":1},"David":{"home":3,"away":0},"Mati":{"home":2,"away":0},"Montse":{"home":3,"away":0},"Paco":{"home":3,"away":0},"Pau":{"home":2,"away":0},"Pepe":{"home":3,"away":1},"Santi":{"home":3,"away":0},"Steph":{"home":2,"away":0}}},{"match":38,"home":"BÉLGICA","away":"IRÁN","group":"G","predictions":{"Alex":{"home":2,"away":0},"David":{"home":2,"away":1},"Mati":{"home":1,"away":1},"Montse":{"home":1,"away":0},"Paco":{"home":4,"away":1},"Pau":{"home":2,"away":1},"Pepe":{"home":2,"away":1},"Santi":{"home":3,"away":0},"Steph":{"home":2,"away":1}}},{"match":39,"home":"URUGUAY","away":"CABO VERDE","group":"H","predictions":{"Alex":{"home":3,"away":0},"David":{"home":2,"away":0},"Mati":{"home":2,"away":0},"Montse":{"home":2,"away":1},"Paco":{"home":3,"away":0},"Pau":{"home":2,"away":0},"Pepe":{"home":2,"away":0},"Santi":{"home":3,"away":0},"Steph":{"home":2,"away":0}}},{"match":40,"home":"NUEVA ZELANDA","away":"EGIPTO","group":"G","predictions":{"Alex":{"home":1,"away":0},"David":{"home":1,"away":1},"Mati":{"home":2,"away":2},"Montse":{"home":1,"away":0},"Paco":{"home":0,"away":4},"Pau":{"home":1,"away":1},"Pepe":{"home":1,"away":1},"Santi":{"home":1,"away":3},"Steph":{"home":0,"away":2}}},{"match":41,"home":"ARGENTINA","away":"AUSTRIA","group":"J","predictions":{"Alex":{"home":2,"away":0},"David":{"home":2,"away":1},"Mati":{"home":2,"away":1},"Montse":{"home":2,"away":0},"Paco":{"home":3,"away":2},"Pau":{"home":2,"away":0},"Pepe":{"home":3,"away":1},"Santi":{"home":3,"away":0},"Steph":{"home":2,"away":1}}},{"match":42,"home":"FRANCIA","away":"IRAK","group":"I","predictions":{"Alex":{"home":3,"away":0},"David":{"home":3,"away":0},"Mati":{"home":5,"away":0},"Montse":{"home":4,"away":0},"Paco":{"home":3,"away":0},"Pau":{"home":3,"away":0},"Pepe":{"home":3,"away":0},"Santi":{"home":3,"away":0},"Steph":{"home":2,"away":0}}},{"match":43,"home":"NORUEGA","away":"SENEGAL","group":"I","predictions":{"Alex":{"home":1,"away":0},"David":{"home":1,"away":1},"Mati":{"home":1,"away":1},"Montse":{"home":0,"away":1},"Paco":{"home":1,"away":2},"Pau":{"home":1,"away":1},"Pepe":{"home":3,"away":1},"Santi":{"home":2,"away":1},"Steph":{"home":1,"away":1}}},{"match":44,"home":"JORDANIA","away":"ARGELIA","group":"J","predictions":{"Alex":{"home":1,"away":1},"David":{"home":0,"away":2},"Mati":{"home":2,"away":3},"Montse":{"home":0,"away":1},"Paco":{"home":2,"away":2},"Pau":{"home":1,"away":2},"Pepe":{"home":1,"away":1},"Santi":{"home":1,"away":3},"Steph":{"home":0,"away":2}}},{"match":45,"home":"PORTUGAL","away":"UZBEKISTÁN","group":"K","predictions":{"Alex":{"home":3,"away":1},"David":{"home":3,"away":0},"Mati":{"home":3,"away":0},"Montse":{"home":3,"away":0},"Paco":{"home":4,"away":0},"Pau":{"home":3,"away":0},"Pepe":{"home":2,"away":0},"Santi":{"home":3,"away":0},"Steph":{"home":2,"away":0}}},{"match":46,"home":"INGLATERRA","away":"GHANA","group":"L","predictions":{"Alex":{"home":4,"away":0},"David":{"home":2,"away":1},"Mati":{"home":2,"away":0},"Montse":{"home":2,"away":1},"Paco":{"home":3,"away":1},"Pau":{"home":2,"away":0},"Pepe":{"home":1,"away":0},"Santi":{"home":2,"away":1},"Steph":{"home":2,"away":0}}},{"match":47,"home":"PANAMÁ","away":"CROACIA","group":"L","predictions":{"Alex":{"home":0,"away":2},"David":{"home":0,"away":2},"Mati":{"home":0,"away":2},"Montse":{"home":2,"away":3},"Paco":{"home":2,"away":3},"Pau":{"home":1,"away":2},"Pepe":{"home":0,"away":2},"Santi":{"home":0,"away":2},"Steph":{"home":0,"away":2}}},{"match":48,"home":"COLOMBIA","away":"REP. del CONGO","group":"K","predictions":{"Alex":{"home":3,"away":1},"David":{"home":2,"away":0},"Mati":{"home":2,"away":0},"Montse":{"home":3,"away":0},"Paco":{"home":4,"away":0},"Pau":{"home":2,"away":0},"Pepe":{"home":1,"away":1},"Santi":{"home":2,"away":0},"Steph":{"home":2,"away":0}}},{"match":49,"home":"SUIZA","away":"CANADÁ","group":"B","predictions":{"Alex":{"home":1,"away":2},"David":{"home":1,"away":1},"Mati":{"home":1,"away":1},"Montse":{"home":2,"away":1},"Paco":{"home":2,"away":0},"Pau":{"home":1,"away":1},"Pepe":{"home":1,"away":1},"Santi":{"home":2,"away":0},"Steph":{"home":1,"away":1}}},{"match":50,"home":"BOSNIA y HERZEG.","away":"CATAR","group":"B","predictions":{"Alex":{"home":0,"away":2},"David":{"home":2,"away":0},"Mati":{"home":1,"away":0},"Montse":{"home":1,"away":0},"Paco":{"home":0,"away":0},"Pau":{"home":2,"away":1},"Pepe":{"home":1,"away":1},"Santi":{"home":1,"away":1},"Steph":{"home":2,"away":1}}},{"match":51,"home":"ESCOCIA","away":"BRASIL","group":"C","predictions":{"Alex":{"home":1,"away":4},"David":{"home":0,"away":2},"Mati":{"home":2,"away":4},"Montse":{"home":1,"away":2},"Paco":{"home":1,"away":2},"Pau":{"home":0,"away":2},"Pepe":{"home":1,"away":3},"Santi":{"home":0,"away":3},"Steph":{"home":0,"away":2}}},{"match":52,"home":"MARRUECOS","away":"HAITÍ","group":"C","predictions":{"Alex":{"home":2,"away":1},"David":{"home":2,"away":0},"Mati":{"home":2,"away":1},"Montse":{"home":2,"away":0},"Paco":{"home":4,"away":0},"Pau":{"home":2,"away":1},"Pepe":{"home":3,"away":0},"Santi":{"home":3,"away":0},"Steph":{"home":2,"away":0}}},{"match":53,"home":"REP. CHECA","away":"MÉXICO","group":"A","predictions":{"Alex":{"home":1,"away":2},"David":{"home":1,"away":2},"Mati":{"home":0,"away":1},"Montse":{"home":1,"away":2},"Paco":{"home":1,"away":2},"Pau":{"home":1,"away":1},"Pepe":{"home":1,"away":2},"Santi":{"home":1,"away":1},"Steph":{"home":1,"away":2}}},{"match":54,"home":"SUDÁFRICA","away":"COREA del SUR","group":"A","predictions":{"Alex":{"home":0,"away":2},"David":{"home":1,"away":1},"Mati":{"home":1,"away":3},"Montse":{"home":0,"away":3},"Paco":{"home":0,"away":3},"Pau":{"home":1,"away":1},"Pepe":{"home":0,"away":1},"Santi":{"home":0,"away":3},"Steph":{"home":1,"away":2}}},{"match":55,"home":"CURAZAO","away":"COSTA de MARFIL","group":"E","predictions":{"Alex":{"home":1,"away":2},"David":{"home":0,"away":2},"Mati":{"home":0,"away":2},"Montse":{"home":1,"away":0},"Paco":{"home":0,"away":0},"Pau":{"home":0,"away":2},"Pepe":{"home":0,"away":2},"Santi":{"home":0,"away":3},"Steph":{"home":0,"away":2}}},{"match":56,"home":"ECUADOR","away":"ALEMANIA","group":"E","predictions":{"Alex":{"home":0,"away":4},"David":{"home":0,"away":2},"Mati":{"home":2,"away":3},"Montse":{"home":0,"away":2},"Paco":{"home":3,"away":4},"Pau":{"home":1,"away":2},"Pepe":{"home":0,"away":3},"Santi":{"home":1,"away":1},"Steph":{"home":0,"away":1}}},{"match":57,"home":"JAPÓN","away":"SUECIA","group":"F","predictions":{"Alex":{"home":1,"away":2},"David":{"home":1,"away":1},"Mati":{"home":2,"away":2},"Montse":{"home":2,"away":1},"Paco":{"home":3,"away":1},"Pau":{"home":1,"away":1},"Pepe":{"home":1,"away":2},"Santi":{"home":2,"away":1},"Steph":{"home":2,"away":1}}},{"match":58,"home":"TÚNEZ","away":"PAÍSES BAJOS","group":"F","predictions":{"Alex":{"home":1,"away":3},"David":{"home":0,"away":2},"Mati":{"home":0,"away":3},"Montse":{"home":0,"away":2},"Paco":{"home":0,"away":5},"Pau":{"home":0,"away":2},"Pepe":{"home":0,"away":2},"Santi":{"home":0,"away":2},"Steph":{"home":0,"away":2}}},{"match":59,"home":"TURQUÍA","away":"ESTADOS UNIDOS","group":"D","predictions":{"Alex":{"home":1,"away":3},"David":{"home":1,"away":2},"Mati":{"home":0,"away":1},"Montse":{"home":2,"away":1},"Paco":{"home":1,"away":4},"Pau":{"home":1,"away":1},"Pepe":{"home":0,"away":2},"Santi":{"home":1,"away":1},"Steph":{"home":1,"away":1}}},{"match":60,"home":"PARAGUAY","away":"AUSTRALIA","group":"D","predictions":{"Alex":{"home":1,"away":2},"David":{"home":1,"away":1},"Mati":{"home":1,"away":0},"Montse":{"home":1,"away":2},"Paco":{"home":2,"away":1},"Pau":{"home":2,"away":1},"Pepe":{"home":1,"away":0},"Santi":{"home":2,"away":0},"Steph":{"home":1,"away":0}}},{"match":61,"home":"NORUEGA","away":"FRANCIA","group":"I","predictions":{"Alex":{"home":0,"away":3},"David":{"home":0,"away":2},"Mati":{"home":1,"away":3},"Montse":{"home":0,"away":4},"Paco":{"home":2,"away":6},"Pau":{"home":1,"away":2},"Pepe":{"home":1,"away":3},"Santi":{"home":1,"away":3},"Steph":{"home":1,"away":2}}},{"match":62,"home":"SENEGAL","away":"IRAK","group":"I","predictions":{"Alex":{"home":1,"away":2},"David":{"home":2,"away":0},"Mati":{"home":2,"away":1},"Montse":{"home":1,"away":0},"Paco":{"home":2,"away":1},"Pau":{"home":2,"away":0},"Pepe":{"home":1,"away":0},"Santi":{"home":2,"away":0},"Steph":{"home":2,"away":0}}},{"match":63,"home":"CABO VERDE","away":"ARABIA SAUDITA","group":"H","predictions":{"Alex":{"home":1,"away":2},"David":{"home":0,"away":2},"Mati":{"home":1,"away":3},"Montse":{"home":1,"away":0},"Paco":{"home":0,"away":1},"Pau":{"home":1,"away":1},"Pepe":{"home":0,"away":1},"Santi":{"home":1,"away":3},"Steph":{"home":1,"away":1}}},{"match":64,"home":"URUGUAY","away":"ESPAÑA","group":"H","predictions":{"Alex":{"home":1,"away":2},"David":{"home":1,"away":2},"Mati":{"home":1,"away":2},"Montse":{"home":1,"away":2},"Paco":{"home":3,"away":3},"Pau":{"home":1,"away":1},"Pepe":{"home":1,"away":2},"Santi":{"home":2,"away":3},"Steph":{"home":1,"away":1}}},{"match":65,"home":"EGIPTO","away":"IRÁN","group":"G","predictions":{"Alex":{"home":1,"away":1},"David":{"home":1,"away":1},"Mati":{"home":0,"away":1},"Montse":{"home":0,"away":1},"Paco":{"home":0,"away":0},"Pau":{"home":1,"away":1},"Pepe":{"home":1,"away":1},"Santi":{"home":2,"away":1},"Steph":{"home":1,"away":1}}},{"match":66,"home":"NUEVA ZELANDA","away":"BÉLGICA","group":"G","predictions":{"Alex":{"home":1,"away":2},"David":{"home":0,"away":2},"Mati":{"home":0,"away":2},"Montse":{"home":1,"away":2},"Paco":{"home":0,"away":1},"Pau":{"home":0,"away":3},"Pepe":{"home":0,"away":2},"Santi":{"home":0,"away":3},"Steph":{"home":0,"away":2}}},{"match":67,"home":"PANAMÁ","away":"INGLATERRA","group":"L","predictions":{"Alex":{"home":0,"away":2},"David":{"home":0,"away":2},"Mati":{"home":1,"away":5},"Montse":{"home":1,"away":2},"Paco":{"home":2,"away":4},"Pau":{"home":0,"away":3},"Pepe":{"home":0,"away":2},"Santi":{"home":0,"away":3},"Steph":{"home":0,"away":2}}},{"match":68,"home":"CROACIA","away":"GHANA","group":"L","predictions":{"Alex":{"home":2,"away":1},"David":{"home":2,"away":1},"Mati":{"home":1,"away":1},"Montse":{"home":3,"away":1},"Paco":{"home":2,"away":2},"Pau":{"home":2,"away":1},"Pepe":{"home":1,"away":0},"Santi":{"home":2,"away":1},"Steph":{"home":2,"away":1}}},{"match":69,"home":"COLOMBIA","away":"PORTUGAL","group":"K","predictions":{"Alex":{"home":1,"away":2},"David":{"home":1,"away":1},"Mati":{"home":1,"away":2},"Montse":{"home":2,"away":1},"Paco":{"home":3,"away":2},"Pau":{"home":1,"away":2},"Pepe":{"home":0,"away":2},"Santi":{"home":3,"away":3},"Steph":{"home":1,"away":1}}},{"match":70,"home":"REP. del CONGO","away":"UZBEKISTÁN","group":"K","predictions":{"Alex":{"home":0,"away":1},"David":{"home":0,"away":1},"Mati":{"home":1,"away":0},"Montse":{"home":0,"away":1},"Paco":{"home":0,"away":0},"Pau":{"home":1,"away":1},"Pepe":{"home":0,"away":0},"Santi":{"home":2,"away":1},"Steph":{"home":1,"away":1}}},{"match":71,"home":"ARGELIA","away":"AUSTRIA","group":"J","predictions":{"Alex":{"home":1,"away":2},"David":{"home":2,"away":0},"Mati":{"home":1,"away":0},"Montse":{"home":1,"away":2},"Paco":{"home":1,"away":3},"Pau":{"home":1,"away":1},"Pepe":{"home":0,"away":2},"Santi":{"home":1,"away":2},"Steph":{"home":1,"away":1}}},{"match":72,"home":"JORDANIA","away":"ARGENTINA","group":"J","predictions":{"Alex":{"home":0,"away":3},"David":{"home":0,"away":2},"Mati":{"home":0,"away":2},"Montse":{"home":0,"away":3},"Paco":{"home":2,"away":1},"Pau":{"home":1,"away":2},"Pepe":{"home":0,"away":3},"Santi":{"home":0,"away":3},"Steph":{"home":0,"away":2}}}];
 
 const GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+
+const MATCH_DATES = {
+  1:"2026-06-11T19:00Z",2:"2026-06-12T02:00Z",3:"2026-06-12T19:00Z",
+  4:"2026-06-13T01:00Z",5:"2026-06-13T19:00Z",6:"2026-06-13T22:00Z",
+  7:"2026-06-14T01:00Z",8:"2026-06-14T04:00Z",9:"2026-06-14T17:00Z",
+  10:"2026-06-14T20:00Z",11:"2026-06-14T23:00Z",12:"2026-06-15T02:00Z",
+  13:"2026-06-15T16:00Z",14:"2026-06-15T19:00Z",15:"2026-06-15T22:00Z",
+  16:"2026-06-16T01:00Z",17:"2026-06-16T19:00Z",18:"2026-06-16T22:00Z",
+  19:"2026-06-17T01:00Z",20:"2026-06-17T04:00Z",21:"2026-06-17T17:00Z",
+  22:"2026-06-17T20:00Z",23:"2026-06-17T23:00Z",24:"2026-06-18T02:00Z",
+  25:"2026-06-18T16:00Z",26:"2026-06-18T19:00Z",27:"2026-06-18T22:00Z",
+  28:"2026-06-19T01:00Z",29:"2026-06-19T19:00Z",30:"2026-06-19T22:00Z",
+  31:"2026-06-20T00:30Z",32:"2026-06-20T03:00Z",33:"2026-06-20T17:00Z",
+  34:"2026-06-20T20:00Z",35:"2026-06-21T00:00Z",36:"2026-06-21T04:00Z",
+  37:"2026-06-21T16:00Z",38:"2026-06-21T19:00Z",39:"2026-06-21T22:00Z",
+  40:"2026-06-22T01:00Z",41:"2026-06-22T17:00Z",42:"2026-06-22T21:00Z",
+  43:"2026-06-23T00:00Z",44:"2026-06-23T03:00Z",45:"2026-06-23T17:00Z",
+  46:"2026-06-23T20:00Z",47:"2026-06-23T23:00Z",48:"2026-06-24T02:00Z",
+  49:"2026-06-24T19:00Z",50:"2026-06-24T19:00Z",51:"2026-06-24T22:00Z",
+  52:"2026-06-24T22:00Z",53:"2026-06-25T01:00Z",54:"2026-06-25T01:00Z",
+  55:"2026-06-25T20:00Z",56:"2026-06-25T20:00Z",57:"2026-06-25T23:00Z",
+  58:"2026-06-25T23:00Z",59:"2026-06-26T02:00Z",60:"2026-06-26T02:00Z",
+  61:"2026-06-26T19:00Z",62:"2026-06-26T19:00Z",63:"2026-06-27T00:00Z",
+  64:"2026-06-27T00:00Z",65:"2026-06-27T03:00Z",66:"2026-06-27T03:00Z",
+  67:"2026-06-27T21:00Z",68:"2026-06-27T21:00Z",69:"2026-06-27T23:30Z",
+  70:"2026-06-27T23:30Z",71:"2026-06-28T02:00Z",72:"2026-06-28T02:00Z"
+};
+
+function formatMatchDate(matchNum) {
+  const iso = MATCH_DATES[matchNum];
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleString('es-ES', {
+    timeZone: 'Europe/Madrid',
+    weekday: 'short', day: 'numeric', month: 'short',
+    hour: '2-digit', minute: '2-digit'
+  });
+}
 
 // Load/save results from localStorage
 function loadResults() {
@@ -531,6 +580,7 @@ function renderMatchCard(m, ci) {
 
   const statusCls = isPlayed ? 'played' : 'pending';
   const statusTxt = isPlayed ? '✓ JUGADO' : 'PENDIENTE';
+  const whenStr = !isPlayed ? formatMatchDate(m.match) : '';
 
   return `<div class="match-card" id="mc${m.match}" style="border-left: 3px solid var(--gc${ci})">
     <div class="match-header" onclick="togglePreds(${m.match})">
@@ -539,6 +589,7 @@ function renderMatchCard(m, ci) {
       ${scoreBlock}
       <div class="team-away">${m.away}</div>
       <div class="match-meta">
+        ${whenStr ? `<span class="match-when">${whenStr}</span>` : ''}
         <span class="match-status ${statusCls}">${statusTxt}</span>
         <span class="chevron" id="chev${m.match}">▼</span>
       </div>
