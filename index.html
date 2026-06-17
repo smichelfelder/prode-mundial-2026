@@ -37,11 +37,38 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    background: var(--bg);
+    background-color: #e8e7e1;
+    background-image: repeating-linear-gradient(
+      -45deg,
+      transparent 0, transparent 30px,
+      rgba(0,0,0,0.022) 30px, rgba(0,0,0,0.022) 31px
+    );
     color: var(--text);
     font-family: 'Barlow', system-ui, sans-serif;
     min-height: 100vh;
   }
+
+  /* ── BACKGROUND DECO ── */
+  .page-deco {
+    position: fixed; inset: 0; z-index: 0;
+    pointer-events: none; overflow: hidden;
+  }
+  .page-deco::before {
+    content: '26';
+    position: absolute; bottom: -80px; right: -20px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 55vw; font-weight: 900; line-height: 1;
+    color: rgba(0,0,0,0.04); letter-spacing: -10px;
+    user-select: none;
+  }
+  .page-deco::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0; height: 5px;
+    background: linear-gradient(90deg, #AAFF00 0%, #00E5CC 33%, #FF4D6D 66%, #A855F7 100%);
+  }
+
+  header { position: relative; z-index: 2; }
+  .container { position: relative; z-index: 1; }
 
   /* ── HEADER ── */
   header {
@@ -113,7 +140,7 @@
   .tab-panel.active { display: block; }
 
   /* ── LEADERBOARD ── */
-  .leaderboard { background: var(--surface); border: 2px solid var(--border); border-radius: 0; overflow: hidden; }
+  .leaderboard { background: var(--surface); border: 2px solid var(--border); border-radius: 0; overflow: hidden; box-shadow: 4px 4px 0 rgba(0,0,0,0.08); }
   .leaderboard-header {
     padding: 12px 20px;
     background: #111;
@@ -187,10 +214,11 @@
   .match-card {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: 0; margin-bottom: 6px; overflow: hidden;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.07);
     transition: box-shadow 0.15s, transform 0.15s;
   }
   .match-card:hover {
-    box-shadow: 3px 3px 0 var(--border);
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.12);
     transform: translate(-1px, -1px);
   }
   .match-header {
@@ -413,6 +441,7 @@
 </style>
 </head>
 <body>
+<div class="page-deco" aria-hidden="true"></div>
 
 <header>
   <div class="header-deco">26</div>
