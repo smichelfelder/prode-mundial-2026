@@ -334,19 +334,53 @@
   .legend .l1 { color: var(--teal); }
   .legend .l0 { color: var(--coral); }
 
-  .match-when {
+  .match-date-row {
+    padding: 0 10px 6px 42px;
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.68rem; color: var(--muted); letter-spacing: 0.5px;
-    white-space: nowrap; text-transform: uppercase;
+    font-size: 0.68rem; color: var(--muted);
+    letter-spacing: 0.5px; text-transform: uppercase;
   }
 
   @media (max-width: 768px) {
-    .header-deco { font-size: 8rem; }
-    .header-title h1 { font-size: 1.5rem; }
-    .leaderboard-header, .lb-row { grid-template-columns: 44px 1fr repeat(3, 70px); }
+    /* Header */
+    header { padding: 0 12px; }
+    .header-deco { display: none; }
+    .header-left { gap: 10px; padding: 12px 0; }
+    .header-trophy { font-size: 1.6rem; }
+    .header-title h1 { font-size: 1.15rem; }
+    .header-title p { display: none; }
+    .sync-area { padding: 12px 0 12px 10px; }
+    .sync-text { display: none; }
+    .sync-btn { padding: 8px 10px; font-size: 0.8rem; letter-spacing: 0; }
+    .sync-status { display: none; }
+
+    /* Tabs */
+    .tabs { overflow-x: auto; gap: 0; }
+    .tab-btn { padding: 10px 14px; font-size: 0.85rem; white-space: nowrap; }
+
+    /* Leaderboard */
+    .leaderboard-header, .lb-row { grid-template-columns: 40px 1fr 60px 60px 60px; }
     .leaderboard-header .h-played, .lb-played { display: none; }
-    .pm-row { grid-template-columns: 28px 1fr auto 1fr 60px 60px; }
-    .team-home, .team-away { font-size: 0.85rem; }
+    .lb-pts { font-size: 1.1rem; }
+    .lb-rank { font-size: 1.2rem; }
+
+    /* Match cards */
+    .match-header { padding: 9px 10px; gap: 5px; }
+    .team-home, .team-away {
+      font-size: 0.75rem; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap;
+    }
+    .match-result-display { font-size: 1.05rem; min-width: 50px; }
+    .score-input { width: 28px; height: 28px; font-size: 0.85rem; }
+    .score-area { gap: 3px; margin: 0 4px; }
+    .match-meta { gap: 3px; }
+    .match-status.pending { display: none; }
+    .match-status.played { font-size: 0.58rem; padding: 2px 5px; }
+    .match-date-row { padding-left: 30px; }
+    .match-num { min-width: 20px; font-size: 0.7rem; }
+
+    /* Player view */
+    .pm-row { grid-template-columns: 28px 1fr auto 1fr 50px 50px; gap: 4px; font-size: 0.78rem; }
   }
 </style>
 </head>
@@ -362,16 +396,16 @@
     </div>
   </div>
   <div class="sync-area">
-    <button class="sync-btn" id="sync-btn" onclick="syncResults()">↻ Sincronizar resultados</button>
+    <button class="sync-btn" id="sync-btn" onclick="syncResults()">↻<span class="sync-text"> Sincronizar resultados</span></button>
     <span class="sync-status" id="sync-status">Última sync: nunca</span>
   </div>
 </header>
 
 <div class="container">
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('standings')">Tabla de Posiciones</button>
+    <button class="tab-btn active" onclick="switchTab('standings')">Posiciones</button>
     <button class="tab-btn" onclick="switchTab('matches')">Partidos</button>
-    <button class="tab-btn" onclick="switchTab('players')">Por Jugador</button>
+    <button class="tab-btn" onclick="switchTab('players')">Jugadores</button>
   </div>
 
   <!-- STANDINGS TAB -->
@@ -589,11 +623,11 @@ function renderMatchCard(m, ci) {
       ${scoreBlock}
       <div class="team-away">${m.away}</div>
       <div class="match-meta">
-        ${whenStr ? `<span class="match-when">${whenStr}</span>` : ''}
         <span class="match-status ${statusCls}">${statusTxt}</span>
         <span class="chevron" id="chev${m.match}">▼</span>
       </div>
     </div>
+    ${whenStr ? `<div class="match-date-row">📅 ${whenStr}</div>` : ''}
     <div class="predictions-panel" id="pp${m.match}">
       <div class="pred-grid">${predRows}</div>
     </div>
@@ -794,7 +828,7 @@ async function syncResults() {
   const btn = document.getElementById('sync-btn');
   const statusEl = document.getElementById('sync-status');
   btn.disabled = true;
-  btn.textContent = '⏳ Sincronizando...';
+  btn.innerHTML = '⏳<span class="sync-text"> Sincronizando...</span>';
   statusEl.textContent = 'Buscando resultados...';
 
   const start = new Date('2026-06-11T00:00:00Z');
@@ -830,7 +864,7 @@ async function syncResults() {
   const t = new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
   statusEl.textContent = `Sync: ${t} · ${updated} resultados`;
   btn.disabled = false;
-  btn.textContent = '🔄 Sincronizar resultados';
+  btn.innerHTML = '↻<span class="sync-text"> Sincronizar resultados</span>';
 }
 
 // Auto-sync always on page load
