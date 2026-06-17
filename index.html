@@ -265,6 +265,26 @@
   .pts-1 .pred-pts { color: var(--teal); }
   .pts-0 .pred-pts { color: var(--coral); }
 
+  /* ── SUB-TABS (within Partidos) ── */
+  .sub-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+  .sub-tab-btn {
+    padding: 6px 18px;
+    background: var(--surface); border: 1.5px solid var(--border);
+    color: var(--muted); cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.88rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    border-radius: 0; transition: all 0.15s;
+  }
+  .sub-tab-btn.active { background: var(--text); border-color: var(--text); color: var(--bg); }
+  .sub-tab-btn:hover:not(.active) { border-color: #aaa; color: var(--text); }
+
+  .chrono-day { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .chrono-day h2 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem; font-weight: 800; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--text);
+  }
+
   /* ── FILTER BAR ── */
   .filter-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
   .filter-btn {
@@ -431,8 +451,14 @@
 
   <!-- MATCHES TAB -->
   <div id="tab-matches" class="tab-panel">
-    <div class="filter-bar" id="group-filters">
-      <button class="filter-btn active" onclick="filterGroup('all', this)">Todos</button>
+    <div class="sub-tabs">
+      <button class="sub-tab-btn active" id="stb-groups" onclick="switchMatchView('groups')">Por Grupo</button>
+      <button class="sub-tab-btn" id="stb-chrono" onclick="switchMatchView('chrono')">Cronológico</button>
+    </div>
+    <div id="group-filters-wrap">
+      <div class="filter-bar" id="group-filters">
+        <button class="filter-btn active" onclick="filterGroup('all', this)">Todos</button>
+      </div>
     </div>
     <div id="matches-container"></div>
   </div>
@@ -498,6 +524,7 @@ function saveResults(results) {
 
 let results = loadResults();
 let activeGroup = 'all';
+let activeMatchView = 'groups';
 let selectedPlayer = null;
 
 function getResult(matchNum) {
@@ -729,11 +756,53 @@ function refresh() {
   if (document.getElementById('tab-players').classList.contains('active')) renderPlayers();
 }
 
+function switchMatchView(view) {
+  activeMatchView = view;
+  document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`stb-${view}`).classList.add('active');
+  const filtersWrap = document.getElementById('group-filters-wrap');
+  if (filtersWrap) filtersWrap.style.display = view === 'groups' ? '' : 'none';
+  if (view === 'groups') { renderGroupFilters(); renderMatches(); }
+  else renderChronoMatches();
+}
+
+function renderChronoMatches() {
+  const container = document.getElementById('matches-container');
+  const sorted = [...MATCHES].sort((a, b) => {
+    const da = MATCH_DATES[a.match] ? new Date(MATCH_DATES[a.match]) : new Date(0);
+    const db = MATCH_DATES[b.match] ? new Date(MATCH_DATES[b.match]) : new Date(0);
+    return da - db;
+  });
+
+  const byDay = {};
+  const dayOrder = [];
+  for (const m of sorted) {
+    const iso = MATCH_DATES[m.match];
+    const d = iso ? new Date(iso) : null;
+    const dayKey = d
+      ? d.toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid', weekday: 'long', day: 'numeric', month: 'long' })
+      : 'Sin fecha';
+    if (!byDay[dayKey]) { byDay[dayKey] = []; dayOrder.push(dayKey); }
+    byDay[dayKey].push(m);
+  }
+
+  container.innerHTML = dayOrder.map(day => {
+    const dayMatches = byDay[day];
+    return `<div class="group-section">
+      <div class="chrono-day"><h2>${day}</h2></div>
+      ${dayMatches.map(m => renderMatchCard(m, GROUP_COLOR[m.group])).join('')}
+    </div>`;
+  }).join('');
+}
+
 function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', ['standings','matches','players'][i]===name));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.getElementById(`tab-${name}`).classList.add('active');
-  if (name === 'matches') { renderGroupFilters(); renderMatches(); }
+  if (name === 'matches') {
+    if (activeMatchView === 'groups') { renderGroupFilters(); renderMatches(); }
+    else renderChronoMatches();
+  }
   if (name === 'players') renderPlayers();
 }
 
