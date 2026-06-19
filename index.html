@@ -706,6 +706,23 @@ const MATCHES = [{"match":1,"home":"MÉXICO","away":"SUDÁFRICA","group":"A","pr
 
 const GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L'];
 
+const TEAM_FLAGS = {
+  'MÉXICO':'🇲🇽','SUDÁFRICA':'🇿🇦','COREA del SUR':'🇰🇷','REP. CHECA':'🇨🇿',
+  'CANADÁ':'🇨🇦','BOSNIA Y HERZEG.':'🇧🇦','BOSNIA y HERZEG.':'🇧🇦',
+  'ESTADOS UNIDOS':'🇺🇸','PARAGUAY':'🇵🇾','CATAR':'🇶🇦','SUIZA':'🇨🇭',
+  'BRASIL':'🇧🇷','MARRUECOS':'🇲🇦','HAITÍ':'🇭🇹','ESCOCIA':'🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+  'AUSTRALIA':'🇦🇺','TURQUÍA':'🇹🇷','ALEMANIA':'🇩🇪','CURAZAO':'🇨🇼',
+  'PAÍSES BAJOS':'🇳🇱','JAPÓN':'🇯🇵','COSTA de MARFIL':'🇨🇮','ECUADOR':'🇪🇨',
+  'SUECIA':'🇸🇪','TÚNEZ':'🇹🇳','ESPAÑA':'🇪🇸','CABO VERDE':'🇨🇻',
+  'BÉLGICA':'🇧🇪','EGIPTO':'🇪🇬','ARABIA SAUDITA':'🇸🇦','URUGUAY':'🇺🇾',
+  'IRÁN':'🇮🇷','NUEVA ZELANDA':'🇳🇿','FRANCIA':'🇫🇷','SENEGAL':'🇸🇳',
+  'IRAK':'🇮🇶','NORUEGA':'🇳🇴','ARGENTINA':'🇦🇷','ARGELIA':'🇩🇿',
+  'AUSTRIA':'🇦🇹','JORDANIA':'🇯🇴','PORTUGAL':'🇵🇹','REP. del CONGO':'🇨🇩',
+  'INGLATERRA':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','CROACIA':'🇭🇷','GHANA':'🇬🇭','PANAMÁ':'🇵🇦',
+  'UZBEKISTÁN':'🇺🇿','COLOMBIA':'🇨🇴',
+};
+function teamFlag(name) { return TEAM_FLAGS[name] ? TEAM_FLAGS[name] + ' ' : ''; }
+
 const MATCH_DATES = {
   1:"2026-06-11T19:00Z",2:"2026-06-12T02:00Z",3:"2026-06-12T19:00Z",
   4:"2026-06-13T01:00Z",5:"2026-06-13T19:00Z",6:"2026-06-13T22:00Z",
@@ -878,9 +895,9 @@ function renderMatchCard(m, ci) {
   return `<div class="match-card" id="mc${m.match}" style="border-left: 3px solid var(--gc${ci})">
     <div class="match-header" onclick="togglePreds(${m.match})">
       <div class="match-num">${m.match}</div>
-      <div class="team-home">${m.home}</div>
+      <div class="team-home">${teamFlag(m.home)}${m.home}</div>
       ${scoreBlock}
-      <div class="team-away">${m.away}</div>
+      <div class="team-away">${teamFlag(m.away)}${m.away}</div>
       <div class="match-meta">
         <span class="match-status ${statusCls}">${statusTxt}</span>
         <span class="chevron" id="chev${m.match}">▼</span>
@@ -960,9 +977,9 @@ function renderPlayerDetail(name) {
     const ci = GROUP_COLOR[m.group];
     return `<div class="pm-row">
       <div style="text-align:center;color:var(--muted);font-size:0.72rem;font-family:'Barlow Condensed',sans-serif">${m.match}</div>
-      <div style="text-align:right;font-size:0.82rem;font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase">${m.home}</div>
+      <div style="text-align:right;font-size:0.82rem;font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase">${teamFlag(m.home)}${m.home}</div>
       <div class="pm-pred">${pred.home}–${pred.away}</div>
-      <div style="text-align:left;font-size:0.82rem;font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase">${m.away}</div>
+      <div style="text-align:left;font-size:0.82rem;font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase">${teamFlag(m.away)}${m.away}</div>
       <div class="pm-pts">${ptsBadge}</div>
       <div style="text-align:center;font-size:0.85rem;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px">${actualStr}</div>
     </div>`;
@@ -1015,7 +1032,7 @@ function renderGroupStandings() {
       const gdStr = t.gd > 0 ? `+${t.gd}` : `${t.gd}`;
       return `<div class="gs-row ${cls}">
         <div class="gs-pos">${i+1}</div>
-        <div class="gs-team">${t.name.replace(/[ÁÉÍÓÚáéíóú]/g, c => c)}</div>
+        <div class="gs-team">${teamFlag(t.name)}${t.name}</div>
         <div class="gs-num">${t.pj}</div>
         <div class="gs-num">${t.g}</div>
         <div class="gs-num">${t.e}</div>
@@ -1081,9 +1098,9 @@ function renderFeaturedMatch() {
     middleHtml = `<span class="fm-time">${dateStr}</span>`;
   }
   teamsEl.innerHTML = `
-    <span class="fm-home">${m.home}</span>
+    <span class="fm-home">${teamFlag(m.home)}${m.home}</span>
     ${middleHtml}
-    <span class="fm-away">${m.away}</span>`;
+    <span class="fm-away">${teamFlag(m.away)}${m.away}</span>`;
 
   // Group label
   document.getElementById('fm-group').textContent = `GRUPO ${m.group}`;
