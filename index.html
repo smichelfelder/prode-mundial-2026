@@ -467,6 +467,11 @@
     font-size: 0.95rem; font-weight: 900; text-align: center; color: var(--text);
   }
   .gs-row.qualify .gs-pts { color: var(--lime); }
+  .gs-live-pts {
+    font-size: 0.62rem; font-weight: 800; color: #e8000d;
+    margin-left: 2px; vertical-align: super;
+    animation: live-pulse 1.4s ease-in-out infinite;
+  }
 
   @media (max-width: 768px) {
     .groups-grid { grid-template-columns: 1fr; gap: 14px; }
@@ -1013,13 +1018,20 @@ function calcGroupStandings(group) {
   const teams = {};
   const gMatches = MATCHES.filter(m => m.group === group);
   for (const m of gMatches) {
-    if (!teams[m.home]) teams[m.home] = { pj:0, g:0, e:0, p:0, gf:0, ga:0 };
-    if (!teams[m.away]) teams[m.away] = { pj:0, g:0, e:0, p:0, gf:0, ga:0 };
+    if (!teams[m.home]) teams[m.home] = { pj:0, g:0, e:0, p:0, gf:0, ga:0, livePts:0 };
+    if (!teams[m.away]) teams[m.away] = { pj:0, g:0, e:0, p:0, gf:0, ga:0, livePts:0 };
   }
   for (const m of gMatches) {
     const r = getResult(m.match);
     if (!r) continue;
     const h = teams[m.home], a = teams[m.away];
+    if (r.live) {
+      // Resultado parcial: no se suma a la tabla confirmada, se muestra como provisional
+      if (r.home > r.away) { h.livePts += 3; }
+      else if (r.away > r.home) { a.livePts += 3; }
+      else { h.livePts += 1; a.livePts += 1; }
+      continue;
+    }
     h.pj++; a.pj++;
     h.gf += r.home; h.ga += r.away;
     a.gf += r.away; a.ga += r.home;
@@ -1050,7 +1062,7 @@ function renderGroupStandings() {
         <div class="gs-num">${t.gf}</div>
         <div class="gs-num">${t.ga}</div>
         <div class="gs-num">${t.pj > 0 ? gdStr : '–'}</div>
-        <div class="gs-pts">${t.pts}</div>
+        <div class="gs-pts">${t.pts}${t.livePts > 0 ? `<span class="gs-live-pts">+${t.livePts}</span>` : ''}</div>
       </div>`;
     }).join('');
     return `<div class="gs-card">
