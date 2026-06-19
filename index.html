@@ -299,6 +299,81 @@
   .pts-1 .pred-pts { color: var(--teal); }
   .pts-0 .pred-pts { color: var(--coral); }
 
+  /* ── GROUP STANDINGS ── */
+  .groups-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+  }
+  .gs-card {
+    background: var(--surface); border: 1px solid var(--border);
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.08); overflow: hidden;
+  }
+  .gs-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    background: #111;
+  }
+  .gs-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem; font-weight: 800; letter-spacing: 3px;
+    text-transform: uppercase; color: #888;
+  }
+  .gs-cols {
+    display: grid;
+    grid-template-columns: 20px 1fr repeat(8, 34px);
+    gap: 0; padding: 6px 14px;
+    background: var(--surface2);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.65rem; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 1px;
+    border-bottom: 1px solid var(--border);
+  }
+  .gs-cols > div { text-align: center; }
+  .gs-cols > div:nth-child(2) { text-align: left; }
+  .gs-row {
+    display: grid;
+    grid-template-columns: 20px 1fr repeat(8, 34px);
+    gap: 0; padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    align-items: center; transition: background 0.1s;
+  }
+  .gs-row:last-child { border-bottom: none; }
+  .gs-row:hover { background: var(--surface2); }
+  .gs-row.qualify { border-left: 3px solid var(--lime-neon); }
+  .gs-row.third { border-left: 3px solid var(--teal-neon); }
+  .gs-row.out { border-left: 3px solid var(--border); }
+  .gs-pos {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.75rem; font-weight: 700; color: var(--muted); text-align: center;
+  }
+  .gs-team {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.88rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .gs-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem; font-weight: 600; color: var(--muted); text-align: center;
+  }
+  .gs-pts {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.95rem; font-weight: 900; text-align: center; color: var(--text);
+  }
+  .gs-row.qualify .gs-pts { color: var(--lime); }
+
+  @media (max-width: 768px) {
+    .groups-grid { grid-template-columns: 1fr; gap: 14px; }
+    .gs-cols, .gs-row { grid-template-columns: 18px 1fr repeat(5, 30px); }
+    /* hide E, GF, GA on mobile — keep PJ G P GD Pts */
+    .gs-cols > div:nth-child(5),
+    .gs-cols > div:nth-child(7),
+    .gs-cols > div:nth-child(8),
+    .gs-row > div:nth-child(5),
+    .gs-row > div:nth-child(7),
+    .gs-row > div:nth-child(8) { display: none; }
+  }
+
   /* ── SUB-TABS (within Partidos) ── */
   .sub-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
   .sub-tab-btn {
@@ -461,6 +536,7 @@
 <div class="container">
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('standings')">Posiciones</button>
+    <button class="tab-btn" onclick="switchTab('groups')">Grupos</button>
     <button class="tab-btn" onclick="switchTab('matches')">Partidos</button>
     <button class="tab-btn" onclick="switchTab('players')">Jugadores</button>
   </div>
@@ -483,6 +559,11 @@
       <span class="l1">■ +1 pt — Resultado correcto (ganador/empate)</span>
       <span class="l0">■ 0 pts — Sin puntos</span>
     </div>
+  </div>
+
+  <!-- GROUPS TAB -->
+  <div id="tab-groups" class="tab-panel">
+    <div id="groups-container"></div>
   </div>
 
   <!-- MATCHES TAB -->
@@ -786,9 +867,70 @@ function renderPlayerDetail(name) {
     </div>`;
 }
 
+// --- GROUP STANDINGS ---
+function calcGroupStandings(group) {
+  const teams = {};
+  const gMatches = MATCHES.filter(m => m.group === group);
+  for (const m of gMatches) {
+    if (!teams[m.home]) teams[m.home] = { pj:0, g:0, e:0, p:0, gf:0, ga:0 };
+    if (!teams[m.away]) teams[m.away] = { pj:0, g:0, e:0, p:0, gf:0, ga:0 };
+  }
+  for (const m of gMatches) {
+    const r = getResult(m.match);
+    if (!r) continue;
+    const h = teams[m.home], a = teams[m.away];
+    h.pj++; a.pj++;
+    h.gf += r.home; h.ga += r.away;
+    a.gf += r.away; a.ga += r.home;
+    if (r.home > r.away) { h.g++; a.p++; }
+    else if (r.away > r.home) { a.g++; h.p++; }
+    else { h.e++; a.e++; }
+  }
+  return Object.entries(teams)
+    .map(([name, s]) => ({ name, ...s, gd: s.gf - s.ga, pts: s.g * 3 + s.e }))
+    .sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.name.localeCompare(b.name));
+}
+
+function renderGroupStandings() {
+  const container = document.getElementById('groups-container');
+  container.innerHTML = `<div class="groups-grid">${GROUPS.map(g => {
+    const ci = GROUP_COLOR[g];
+    const rows = calcGroupStandings(g);
+    const rowsHtml = rows.map((t, i) => {
+      const cls = i < 2 ? 'qualify' : i === 2 ? 'third' : 'out';
+      const gdStr = t.gd > 0 ? `+${t.gd}` : `${t.gd}`;
+      return `<div class="gs-row ${cls}">
+        <div class="gs-pos">${i+1}</div>
+        <div class="gs-team">${t.name.replace(/[ÁÉÍÓÚáéíóú]/g, c => c)}</div>
+        <div class="gs-num">${t.pj}</div>
+        <div class="gs-num">${t.g}</div>
+        <div class="gs-num">${t.e}</div>
+        <div class="gs-num">${t.p}</div>
+        <div class="gs-num">${t.gf}</div>
+        <div class="gs-num">${t.ga}</div>
+        <div class="gs-num">${t.pj > 0 ? gdStr : '–'}</div>
+        <div class="gs-pts">${t.pts}</div>
+      </div>`;
+    }).join('');
+    return `<div class="gs-card">
+      <div class="gs-header">
+        <div class="group-badge gc-${ci}">${g}</div>
+        <div class="gs-title">Grupo ${g}</div>
+      </div>
+      <div class="gs-cols">
+        <div>#</div><div>Equipo</div>
+        <div>PJ</div><div>G</div><div>E</div><div>P</div>
+        <div>GF</div><div>GA</div><div>DG</div><div>Pts</div>
+      </div>
+      ${rowsHtml}
+    </div>`;
+  }).join('')}</div>`;
+}
+
 function refresh() {
   renderStandings();
   renderMatches();
+  if (document.getElementById('tab-groups').classList.contains('active')) renderGroupStandings();
   if (document.getElementById('tab-players').classList.contains('active')) renderPlayers();
 }
 
@@ -832,9 +974,10 @@ function renderChronoMatches() {
 }
 
 function switchTab(name) {
-  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', ['standings','matches','players'][i]===name));
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', ['standings','groups','matches','players'][i]===name));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.getElementById(`tab-${name}`).classList.add('active');
+  if (name === 'groups') renderGroupStandings();
   if (name === 'matches') {
     if (activeMatchView === 'groups') { renderGroupFilters(); renderMatches(); }
     else renderChronoMatches();
