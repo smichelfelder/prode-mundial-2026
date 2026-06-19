@@ -179,6 +179,11 @@
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 1.4rem; font-weight: 900; color: var(--lime); text-align: center;
   }
+  .lb-live-pts {
+    font-size: 0.8rem; font-weight: 800; color: #e8000d;
+    margin-left: 3px; vertical-align: super;
+    animation: live-pulse 1.4s ease-in-out infinite;
+  }
   .lb-exact { color: var(--exact); font-weight: 700; text-align: center; font-size: 1rem; }
   .lb-result { color: var(--result); font-weight: 700; text-align: center; font-size: 1rem; }
   .lb-played { color: var(--muted); font-weight: 600; text-align: center; font-size: 0.9rem; }
@@ -792,18 +797,23 @@ function calcPoints(pred, actual) {
 }
 
 function calcPlayerStats(player) {
-  let pts = 0, exact = 0, result = 0, played = 0;
+  let pts = 0, exact = 0, result = 0, played = 0, livePts = 0;
   for (const m of MATCHES) {
     const actual = getResult(m.match);
     if (!actual) continue;
-    played++;
     const pred = m.predictions[player];
     const p = calcPoints(pred, actual);
+    if (actual.live) {
+      // Resultado parcial: no se suma al total confirmado, se muestra aparte
+      livePts += p;
+      continue;
+    }
+    played++;
     pts += p;
     if (p === 2) exact++;
     else if (p === 1) result++;
   }
-  return { pts, exact, result, played };
+  return { pts, exact, result, played, livePts };
 }
 
 // --- STANDINGS ---
@@ -824,7 +834,7 @@ function renderStandings() {
         <div class="lb-name">${s.name}</div>
         <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
       </div>
-      <div class="lb-pts">${s.pts}</div>
+      <div class="lb-pts">${s.pts}${s.livePts > 0 ? `<span class="lb-live-pts">+${s.livePts}</span>` : ''}</div>
       <div class="lb-exact">${s.exact}</div>
       <div class="lb-result">${s.result}</div>
       <div class="lb-played h-played">${s.played}/${MATCHES.length}</div>
