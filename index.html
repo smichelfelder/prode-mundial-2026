@@ -266,6 +266,12 @@
   }
   .match-status.pending { border: 1px solid var(--border); color: var(--muted); }
   .match-status.played { background: var(--lime-neon); border-color: var(--lime-neon); color: #000; font-weight: 800; }
+  .match-status.live {
+    background: #e8000d; border-color: #e8000d; color: #fff; font-weight: 800;
+    animation: live-pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes live-pulse { 0%,100%{opacity:1} 50%{opacity:0.55} }
+  .match-result-display.is-live { background: #1a0000; color: #ff7070; animation: live-pulse 1.4s ease-in-out infinite; }
   .chevron { color: var(--muted); font-size: 0.75rem; transition: transform 0.2s; }
   .chevron.open { transform: rotate(180deg); }
 
@@ -734,9 +740,10 @@ function renderMatches() {
 function renderMatchCard(m, ci) {
   const actual = getResult(m.match);
   const isPlayed = !!actual;
+  const isLive = isPlayed && actual.live;
 
   const scoreBlock = isPlayed
-    ? `<div class="match-result-display">${actual.home} – ${actual.away}</div>`
+    ? `<div class="match-result-display${isLive ? ' is-live' : ''}">${actual.home} – ${actual.away}</div>`
     : `<div class="score-area">
         <input class="score-input" type="number" min="0" max="20" placeholder="–"
           id="h${m.match}" onclick="event.stopPropagation()" onchange="saveScore(${m.match})">
@@ -747,7 +754,7 @@ function renderMatchCard(m, ci) {
 
   const predRows = PLAYERS.map(p => {
     const pred = m.predictions[p];
-    const pts = calcPoints(pred, actual);
+    const pts = isLive ? null : calcPoints(pred, actual);
     const cls = pts === null ? '' : pts === 2 ? 'pts-2' : pts === 1 ? 'pts-1' : 'pts-0';
     const lbl = pts === null ? '' : pts === 2 ? '+2 EXACTO' : pts === 1 ? '+1 RESULT.' : '0 PTS';
     return `<div class="pred-cell ${cls}">
@@ -757,8 +764,8 @@ function renderMatchCard(m, ci) {
     </div>`;
   }).join('');
 
-  const statusCls = isPlayed ? 'played' : 'pending';
-  const statusTxt = isPlayed ? '✓ JUGADO' : 'PENDIENTE';
+  const statusCls = isLive ? 'live' : isPlayed ? 'played' : 'pending';
+  const statusTxt = isLive ? `🔴 ${actual.clock || 'EN VIVO'}` : isPlayed ? '✓ JUGADO' : 'PENDIENTE';
   const whenStr = !isPlayed ? formatMatchDate(m.match) : '';
 
   return `<div class="match-card" id="mc${m.match}" style="border-left: 3px solid var(--gc${ci})">
@@ -1062,14 +1069,17 @@ async function fetchDateScores(dateStr) {
   for (const ev of data.events || []) {
     const comps = ev.competitions?.[0]?.competitors || [];
     if (comps.length < 2) continue;
-    const completed = ev.competitions[0].status?.type?.completed === true;
-    if (!completed) continue;
+    const status = ev.competitions[0].status;
+    const completed = status?.type?.completed === true;
+    const inProgress = status?.type?.state === 'in';
+    if (!completed && !inProgress) continue;
     const home = comps[0]?.team?.displayName || '';
     const away = comps[1]?.team?.displayName || '';
     const hs = parseInt(comps[0]?.score);
     const as_ = parseInt(comps[1]?.score);
     if (isNaN(hs) || isNaN(as_)) continue;
-    found.push({ home, away, hs, as_ });
+    const clock = status?.displayClock || '';
+    found.push({ home, away, hs, as_, live: inProgress, clock });
   }
   return found;
 }
@@ -1088,15 +1098,16 @@ async function syncResults() {
     dates.push(d.toISOString().slice(0,10).replace(/-/g,''));
   }
 
-  let updated = 0, unmatched = [];
+  let updated = 0, liveCount = 0, unmatched = [];
   for (const dateStr of dates) {
     try {
       const found = await fetchDateScores(dateStr);
-      for (const { home, away, hs, as_ } of found) {
+      for (const { home, away, hs, as_, live, clock } of found) {
         const mn = findMatchByTeams(home, away);
         if (mn) {
-          results[mn] = { home: hs, away: as_ };
+          results[mn] = { home: hs, away: as_, live: !!live, clock: clock || '' };
           updated++;
+          if (live) liveCount++;
         } else {
           unmatched.push(`${home} vs ${away}`);
         }
@@ -1112,9 +1123,15 @@ async function syncResults() {
   localStorage.setItem('prode_last_sync', Date.now());
 
   const t = new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
-  statusEl.textContent = `Sync: ${t} · ${updated} resultados`;
+  const liveLabel = liveCount > 0 ? ` · 🔴 ${liveCount} en vivo` : '';
+  statusEl.textContent = `Sync: ${t} · ${updated} resultados${liveLabel}`;
   btn.disabled = false;
   btn.innerHTML = '↻<span class="sync-text"> Sincronizar resultados</span>';
+
+  // Auto-refresca cada 60 segundos mientras haya partidos en vivo
+  if (liveCount > 0) {
+    setTimeout(() => syncResults(), 60000);
+  }
 }
 
 // Auto-sync always on page load
