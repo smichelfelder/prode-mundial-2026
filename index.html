@@ -305,6 +305,101 @@
   .pts-1 .pred-pts { color: var(--teal); }
   .pts-0 .pred-pts { color: var(--coral); }
 
+  /* ── FEATURED MATCH BAR ── */
+  .featured-bar {
+    background: var(--surface); border-bottom: 2px solid var(--border);
+    position: relative; z-index: 2;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .fm-inner {
+    max-width: 1400px; margin: 0 auto; padding: 10px 20px;
+    display: flex; align-items: center; gap: 14px;
+    cursor: pointer; user-select: none;
+    transition: background 0.15s;
+  }
+  .fm-inner:hover { background: var(--surface2); }
+  .fm-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.65rem; font-weight: 800; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--muted);
+    white-space: nowrap; min-width: 60px;
+  }
+  .fm-label.is-live {
+    color: #e8000d; animation: live-pulse 1.4s ease-in-out infinite;
+  }
+  .fm-teams {
+    display: flex; align-items: center; gap: 10px; flex: 1;
+    justify-content: center;
+  }
+  .fm-home {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 1px; text-align: right; flex: 1;
+  }
+  .fm-away {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 1px; text-align: left; flex: 1;
+  }
+  .fm-score {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.3rem; font-weight: 900; letter-spacing: 3px;
+    background: #111; color: #fff; padding: 3px 14px;
+    white-space: nowrap;
+  }
+  .fm-score.is-live {
+    background: #1a0000; color: #ff7070;
+    animation: live-pulse 1.4s ease-in-out infinite;
+  }
+  .fm-time {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.78rem; font-weight: 700; color: var(--muted);
+    text-align: center; white-space: nowrap; letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .fm-group {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.65rem; font-weight: 800; letter-spacing: 2px;
+    color: var(--muted); white-space: nowrap;
+  }
+  .fm-chevron {
+    color: var(--muted); font-size: 0.75rem;
+    transition: transform 0.2s; flex-shrink: 0;
+  }
+  .fm-chevron.open { transform: rotate(180deg); }
+
+  .fm-preds-panel {
+    display: none; border-top: 1px solid var(--border);
+    background: var(--surface2);
+    padding: 10px 20px 12px;
+  }
+  .fm-preds-panel.open { display: block; }
+  .fm-pred-grid {
+    max-width: 1400px; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 6px;
+  }
+  .fm-pred-cell {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 7px 10px; text-align: center;
+  }
+  .fm-pred-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.62rem; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px;
+  }
+  .fm-pred-score {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem; font-weight: 800; letter-spacing: 2px; color: var(--text);
+  }
+
+  @media (max-width: 768px) {
+    .fm-inner { padding: 8px 12px; gap: 8px; }
+    .fm-home, .fm-away { font-size: 0.78rem; }
+    .fm-score { font-size: 1.05rem; padding: 2px 10px; }
+    .fm-group { display: none; }
+    .fm-label { min-width: 44px; font-size: 0.58rem; }
+  }
+
   /* ── GROUP STANDINGS ── */
   .groups-grid {
     display: grid;
@@ -538,6 +633,18 @@
     <span class="sync-status" id="sync-status">Última sync: nunca</span>
   </div>
 </header>
+
+<div class="featured-bar" id="featured-bar">
+  <div class="fm-inner" onclick="toggleFeatured()">
+    <div class="fm-label" id="fm-label">PRÓXIMO</div>
+    <div class="fm-teams" id="fm-teams"></div>
+    <div class="fm-group" id="fm-group"></div>
+    <span class="fm-chevron" id="fm-chevron">▼</span>
+  </div>
+  <div class="fm-preds-panel" id="fm-preds-panel">
+    <div class="fm-pred-grid" id="fm-pred-grid"></div>
+  </div>
+</div>
 
 <div class="container">
   <div class="tabs">
@@ -934,9 +1041,74 @@ function renderGroupStandings() {
   }).join('')}</div>`;
 }
 
+// --- FEATURED MATCH BAR ---
+let featuredOpen = false;
+
+function getFeaturedMatch() {
+  // 1. Partido en vivo tiene prioridad
+  for (const m of MATCHES) {
+    const r = getResult(m.match);
+    if (r && r.live) return { match: m, isLive: true, actual: r };
+  }
+  // 2. Próximo partido sin resultado, ordenado por fecha
+  const upcoming = MATCHES
+    .filter(m => !getResult(m.match) && MATCH_DATES[m.match])
+    .sort((a, b) => new Date(MATCH_DATES[a.match]) - new Date(MATCH_DATES[b.match]));
+  if (upcoming.length > 0) return { match: upcoming[0], isLive: false, actual: null };
+  return null;
+}
+
+function renderFeaturedMatch() {
+  const bar = document.getElementById('featured-bar');
+  const featured = getFeaturedMatch();
+  if (!featured) { bar.style.display = 'none'; return; }
+  bar.style.display = '';
+
+  const { match: m, isLive, actual } = featured;
+
+  // Label
+  const labelEl = document.getElementById('fm-label');
+  labelEl.className = 'fm-label' + (isLive ? ' is-live' : '');
+  labelEl.textContent = isLive ? '🔴 EN VIVO' : 'PRÓXIMO';
+
+  // Teams + score/time
+  const teamsEl = document.getElementById('fm-teams');
+  let middleHtml;
+  if (isLive) {
+    middleHtml = `<span class="fm-score is-live">${actual.home} – ${actual.away}</span>`;
+  } else {
+    const dateStr = formatMatchDate(m.match);
+    middleHtml = `<span class="fm-time">${dateStr}</span>`;
+  }
+  teamsEl.innerHTML = `
+    <span class="fm-home">${m.home}</span>
+    ${middleHtml}
+    <span class="fm-away">${m.away}</span>`;
+
+  // Group label
+  document.getElementById('fm-group').textContent = `GRUPO ${m.group}`;
+
+  // Predictions panel
+  const grid = document.getElementById('fm-pred-grid');
+  grid.innerHTML = PLAYERS.map(p => {
+    const pred = m.predictions[p];
+    return `<div class="fm-pred-cell">
+      <div class="fm-pred-name">${p}</div>
+      <div class="fm-pred-score">${pred.home}–${pred.away}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleFeatured() {
+  featuredOpen = !featuredOpen;
+  document.getElementById('fm-preds-panel').classList.toggle('open', featuredOpen);
+  document.getElementById('fm-chevron').classList.toggle('open', featuredOpen);
+}
+
 function refresh() {
   renderStandings();
   renderMatches();
+  renderFeaturedMatch();
   if (document.getElementById('tab-groups').classList.contains('active')) renderGroupStandings();
   if (document.getElementById('tab-players').classList.contains('active')) renderPlayers();
 }
@@ -1138,6 +1310,7 @@ async function syncResults() {
 window.addEventListener('load', () => syncResults());
 
 // Init
+renderFeaturedMatch();
 renderStandings();
 renderGroupFilters();
 renderMatches();
