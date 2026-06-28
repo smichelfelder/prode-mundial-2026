@@ -1696,6 +1696,7 @@ function renderLoadTab() {
       const lockedLabel = hasResult
         ? '🔒 Iniciado'
         : `🔒 Cierra T-30'`;
+      const inputDisabled = (loadSyncing || locked || tbd) ? 'disabled' : '';
       const rightCol = locked
         ? `<div class="load-locked-tag">${lockedLabel}</div>`
         : tbd
@@ -1706,10 +1707,10 @@ function renderLoadTab() {
         <div class="load-team-h">${teamFlag(m.home)}${m.home}</div>
         <div class="load-score-area">
           <input class="load-score-input" type="number" inputmode="numeric" min="0" max="20"
-            id="lh${m.match}" value="${hVal}" ${disabled}>
+            id="lh${m.match}" value="${hVal}" ${inputDisabled}>
           <span class="load-score-sep">–</span>
           <input class="load-score-input" type="number" inputmode="numeric" min="0" max="20"
-            id="la${m.match}" value="${aVal}" ${disabled}>
+            id="la${m.match}" value="${aVal}" ${inputDisabled}>
         </div>
         <div class="load-team-a">${teamFlag(m.away)}${m.away}</div>
         <div>${rightCol}</div>
@@ -1719,7 +1720,7 @@ function renderLoadTab() {
 
   html += `</div>
     <div class="load-save-bar">
-      <button class="load-btn" onclick="loadSave()">💾 Guardar pronósticos</button>
+      <button class="load-btn" onclick="loadSave()" ${loadSyncing ? 'disabled' : ''}>💾 Guardar pronósticos</button>
     </div>`;
 
   panel.innerHTML = html;
@@ -1846,7 +1847,7 @@ function snapshotLoadInputs() {
   for (const m of KNOCKOUT_MATCHES) {
     const hEl = document.getElementById(`lh${m.match}`);
     const aEl = document.getElementById(`la${m.match}`);
-    if (!hEl || !aEl || hEl.disabled) continue;
+    if (!hEl || !aEl) continue;
     const h = hEl.value;
     const a = aEl.value;
     if (h !== '' || a !== '') snap[m.match] = { home: h, away: a };
@@ -1857,8 +1858,8 @@ function restoreLoadInputs(snap) {
   for (const [matchNum, vals] of Object.entries(snap)) {
     const hEl = document.getElementById(`lh${matchNum}`);
     const aEl = document.getElementById(`la${matchNum}`);
-    if (hEl && !hEl.disabled) hEl.value = vals.home;
-    if (aEl && !aEl.disabled) aEl.value = vals.away;
+    if (hEl) hEl.value = vals.home;
+    if (aEl) aEl.value = vals.away;
   }
 }
 
@@ -1892,9 +1893,12 @@ async function applyRoute() {
 
   await verifyStoredAuth();
 
+  // Snapshot ANTES de rerenderizar para no perder lo que el usuario haya tipeado
+  const snap = snapshotLoadInputs();
+
   loadSyncing = true;
   renderLoadTab();
-  const snap = snapshotLoadInputs();
+  restoreLoadInputs(snap);
   try { await syncResults(); } catch(e) { console.warn('sync error', e); }
   loadSyncing = false;
   renderLoadTab();
