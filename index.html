@@ -327,6 +327,12 @@
   }
   .predictions-panel.open { display: block; }
   .pred-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; }
+  .preds-hidden {
+    text-align: center; padding: 14px 12px; color: var(--muted);
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px; font-size: 0.82rem;
+    border: 1px dashed var(--border); background: var(--surface); border-radius: 0;
+  }
   .pred-cell {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: 0; padding: 8px 10px; text-align: center; transition: border-color 0.15s;
@@ -1110,7 +1116,13 @@ async function fetchPredictions() {
     const res = await fetch('/api/predictions');
     if (!res.ok) return;
     const data = await res.json();
-    userPredictions = data.predictions || {};
+    const pub = data.predictions || {};
+    // El GET público solo trae pronósticos ya revelados (T-30'). Si estás logueado
+    // en modo Cargar, no pisamos tus pronósticos completos traídos con tu PIN.
+    if (loadAuth && loadAuth.name && userPredictions[loadAuth.name]) {
+      pub[loadAuth.name] = userPredictions[loadAuth.name];
+    }
+    userPredictions = pub;
   } catch(e) {
     console.warn('No se pudieron cargar pronósticos remotos:', e.message);
   }
@@ -1118,6 +1130,16 @@ async function fetchPredictions() {
 
 function getResult(matchNum) {
   return results[matchNum] || null;
+}
+
+// Los pronósticos de los demás se revelan recién 30 minutos antes del partido.
+// Antes de eso solo podés ver los tuyos entrando con tu PIN al modo "Cargar".
+const REVEAL_BUFFER_MS = 30 * 60 * 1000;
+function isMatchRevealed(matchNum) {
+  if (getResult(matchNum)) return true; // ya empezó o terminó
+  const iso = MATCH_DATES[matchNum];
+  if (!iso) return false; // partido sin fecha (TBD) → oculto
+  return Date.now() >= new Date(iso).getTime() - REVEAL_BUFFER_MS;
 }
 
 function getOutcome(h, a) {
@@ -1318,6 +1340,8 @@ function renderMatchCard(m, ci) {
           id="a${m.match}" onclick="event.stopPropagation()" onchange="saveScore(${m.match})">
       </div>`;
 
+  const revealed = isMatchRevealed(m.match);
+
   const predRows = PLAYERS.map(p => {
     const pred = getPrediction(p, m);
     if (!pred) {
@@ -1337,6 +1361,10 @@ function renderMatchCard(m, ci) {
     </div>`;
   }).join('');
 
+  const predPanelInner = revealed
+    ? `<div class="pred-grid">${predRows}</div>`
+    : `<div class="preds-hidden">🔒 Pronósticos ocultos · se revelan 30 min antes del partido</div>`;
+
   const statusCls = isLive ? 'live' : isPlayed ? 'played' : 'pending';
   const statusTxt = isLive ? `🔴 ${actual.clock || 'EN VIVO'}` : isPlayed ? '✓ JUGADO' : 'PENDIENTE';
   const whenStr = !isPlayed ? formatMatchDate(m.match) : '';
@@ -1354,7 +1382,7 @@ function renderMatchCard(m, ci) {
     </div>
     ${whenStr ? `<div class="match-date-row">📅 ${whenStr}</div>` : ''}
     <div class="predictions-panel" id="pp${m.match}">
-      <div class="pred-grid">${predRows}</div>
+      ${predPanelInner}
     </div>
   </div>`;
 }
@@ -1415,15 +1443,18 @@ function selectPlayer(name) {
 function renderPlayerDetail(name) {
   const detail = document.getElementById('player-detail');
   const rows = ALL_MATCHES.map(m => {
+    const revealed = isMatchRevealed(m.match);
     const pred = getPrediction(name, m);
     const actual = getResult(m.match);
-    const pts = pred ? calcPoints(pred, actual) : null;
+    const pts = (revealed && pred) ? calcPoints(pred, actual) : null;
     const ptsBadge = pts === null ? `<span class="badge-p">–</span>` :
       pts === 2 ? `<span class="badge-2">+2</span>` :
       pts === 1 ? `<span class="badge-1">+1</span>` :
       `<span class="badge-0">0</span>`;
     const actualStr = actual ? `${actual.home}–${actual.away}` : '–';
-    const predStr = pred ? `${pred.home}–${pred.away}` : '<span style="color:var(--muted)">–</span>';
+    const predStr = !revealed
+      ? '<span title="Se revela 30 min antes del partido">🔒</span>'
+      : pred ? `${pred.home}–${pred.away}` : '<span style="color:var(--muted)">–</span>';
     return `<div class="pm-row">
       <div style="text-align:center;color:var(--muted);font-size:0.72rem;font-family:'Barlow Condensed',sans-serif">${m.match}</div>
       <div style="text-align:right;font-size:0.82rem;font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase">${teamFlag(m.home)}${m.home}</div>
@@ -1562,16 +1593,20 @@ function renderFeaturedMatch() {
   const groupLbl = m.group ? `GRUPO ${m.group}` : (ROUND_LABELS[m.round] || '').toUpperCase();
   document.getElementById('fm-group').textContent = groupLbl;
 
-  // Predictions panel
+  // Predictions panel — ocultos hasta 30 min antes del partido
   const grid = document.getElementById('fm-pred-grid');
-  grid.innerHTML = PLAYERS.map(p => {
-    const pred = getPrediction(p, m);
-    const scoreStr = pred ? `${pred.home}–${pred.away}` : '<span style="color:var(--muted)">–</span>';
-    return `<div class="fm-pred-cell">
-      <div class="fm-pred-name">${p}</div>
-      <div class="fm-pred-score">${scoreStr}</div>
-    </div>`;
-  }).join('');
+  if (!isMatchRevealed(m.match)) {
+    grid.innerHTML = `<div class="preds-hidden">🔒 Pronósticos ocultos · se revelan 30 min antes del partido</div>`;
+  } else {
+    grid.innerHTML = PLAYERS.map(p => {
+      const pred = getPrediction(p, m);
+      const scoreStr = pred ? `${pred.home}–${pred.away}` : '<span style="color:var(--muted)">–</span>';
+      return `<div class="fm-pred-cell">
+        <div class="fm-pred-name">${p}</div>
+        <div class="fm-pred-score">${scoreStr}</div>
+      </div>`;
+    }).join('');
+  }
 }
 
 function toggleFeatured() {
@@ -1702,10 +1737,11 @@ async function loadContinue() {
   if (btn) btn.disabled = true;
 
   try {
+    // "mine" verifica el PIN y devuelve TUS pronósticos completos (incluidos los ocultos)
     const res = await fetch('/api/predictions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'verify', name, pin })
+      body: JSON.stringify({ action: 'mine', name, pin })
     });
     let data = {};
     try { data = await res.json(); } catch(e) {}
@@ -1719,6 +1755,8 @@ async function loadContinue() {
       if (btn) btn.disabled = false;
       return;
     }
+    // Guardamos tus pronósticos completos para poder mostrarlos/editarlos
+    userPredictions[name] = data.predictions || {};
   } catch(e) {
     status.innerHTML = `<div class="load-status err">Error de red: ${e.message}</div>`;
     if (btn) btn.disabled = false;
@@ -1830,11 +1868,17 @@ async function verifyStoredAuth() {
     const r = await fetch('/api/predictions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'verify', name: loadAuth.name, pin: loadAuth.pin })
+      body: JSON.stringify({ action: 'mine', name: loadAuth.name, pin: loadAuth.pin })
     });
     if (r.status === 403) {
       loadAuth = {};
       saveLoadAuth(loadAuth);
+      return;
+    }
+    const data = await r.json().catch(() => ({}));
+    if (data && data.predictions) {
+      // Cargamos tus pronósticos completos (incluidos los aún ocultos al público)
+      userPredictions[loadAuth.name] = data.predictions;
     }
   } catch(e) { /* network failure → keep cached auth */ }
 }
