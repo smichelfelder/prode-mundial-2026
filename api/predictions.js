@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const body = req.body || {};
-      const { name, pin, predictions } = body;
+      const { name, pin, predictions, action } = body;
 
       if (!name || !PLAYERS.includes(name)) {
         return res.status(400).json({ error: 'Jugador inválido' });
@@ -29,6 +29,15 @@ export default async function handler(req, res) {
       if (!pin || typeof pin !== 'string' || !/^\d{4,6}$/.test(pin)) {
         return res.status(400).json({ error: 'El PIN debe ser de 4 a 6 dígitos' });
       }
+
+      // Modo "verify": solo chequea PIN, no guarda nada
+      if (action === 'verify') {
+        const existingPin = await kv.hget('pins', name);
+        if (!existingPin) return res.status(200).json({ first_time: true });
+        if (String(existingPin) !== pin) return res.status(403).json({ error: 'PIN incorrecto' });
+        return res.status(200).json({ ok: true });
+      }
+
       if (!predictions || typeof predictions !== 'object') {
         return res.status(400).json({ error: 'Pronósticos inválidos' });
       }

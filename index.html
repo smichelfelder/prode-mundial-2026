@@ -719,6 +719,19 @@
   .load-status.ok { background: rgba(170,255,0,0.15); border-left: 3px solid var(--lime); color: var(--lime); }
   .load-status.err { background: rgba(214,25,60,0.1); border-left: 3px solid var(--coral); color: var(--coral); }
   .load-status.info { background: var(--surface2); border-left: 3px solid var(--muted); color: var(--muted); }
+  .load-syncing {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 14px; margin-bottom: 14px;
+    background: var(--surface2); border-left: 3px solid var(--teal-neon);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.8rem; font-weight: 700; letter-spacing: 1px;
+    color: var(--teal); text-transform: uppercase;
+  }
+  .load-syncing::before {
+    content: '🔄'; animation: spin 1.4s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
 
   .load-session {
     display: flex; justify-content: space-between; align-items: center;
@@ -1610,8 +1623,13 @@ function renderLoadTab() {
 
   const userPreds = userPredictions[loadAuth.name] || {};
   const now = Date.now();
+  const LOCK_BUFFER_MS = 30 * 60 * 1000;
 
-  let html = `${backLink}
+  const syncBanner = loadSyncing
+    ? `<div class="load-syncing">Actualizando estado de partidos…</div>`
+    : '';
+
+  let html = `${backLink}${syncBanner}
     <div class="load-session">
       <div class="load-session-info">
         <div class="lbl">Cargando como</div>
@@ -1630,7 +1648,9 @@ function renderLoadTab() {
     for (const m of roundMatches) {
       const iso = MATCH_DATES[m.match];
       const kickoff = iso ? new Date(iso).getTime() : null;
-      const locked = !!(kickoff && kickoff <= now);
+      const hasResult = !!getResult(m.match);
+      const withinLockBuffer = kickoff && (kickoff - LOCK_BUFFER_MS) <= now;
+      const locked = !!(hasResult || withinLockBuffer);
       const tbd = m.home === 'TBD' || m.away === 'TBD';
       const pred = userPreds[m.match] || {};
       const hVal = pred.home != null ? pred.home : '';
@@ -1638,8 +1658,11 @@ function renderLoadTab() {
       const when = iso ? formatMatchDate(m.match) : 'Por definir';
       const disabled = locked || tbd ? 'disabled' : '';
       const rowCls = locked ? 'locked' : tbd ? 'tbd' : '';
+      const lockedLabel = hasResult
+        ? '🔒 Iniciado'
+        : `🔒 Cierra T-30'`;
       const rightCol = locked
-        ? '<div class="load-locked-tag">🔒 Cerrado</div>'
+        ? `<div class="load-locked-tag">${lockedLabel}</div>`
         : tbd
           ? '<div class="load-locked-tag">Por definir</div>'
           : `<div class="load-when">${when}</div>`;
@@ -1667,12 +1690,41 @@ function renderLoadTab() {
   panel.innerHTML = html;
 }
 
-function loadContinue() {
+async function loadContinue() {
   const name = document.getElementById('load-name').value;
   const pin = (document.getElementById('load-pin').value || '').trim();
   const status = document.getElementById('load-status');
+  const btn = document.querySelector('.load-card .load-btn');
   if (!name) { status.innerHTML = '<div class="load-status err">Elegí tu nombre</div>'; return; }
   if (!/^\d{4,6}$/.test(pin)) { status.innerHTML = '<div class="load-status err">El PIN debe ser de 4 a 6 dígitos</div>'; return; }
+
+  status.innerHTML = '<div class="load-status info">Verificando PIN…</div>';
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/predictions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'verify', name, pin })
+    });
+    let data = {};
+    try { data = await res.json(); } catch(e) {}
+    if (res.status === 403) {
+      status.innerHTML = '<div class="load-status err">PIN incorrecto</div>';
+      if (btn) btn.disabled = false;
+      return;
+    }
+    if (!res.ok) {
+      status.innerHTML = `<div class="load-status err">${data.error || 'Error verificando'}</div>`;
+      if (btn) btn.disabled = false;
+      return;
+    }
+  } catch(e) {
+    status.innerHTML = `<div class="load-status err">Error de red: ${e.message}</div>`;
+    if (btn) btn.disabled = false;
+    return;
+  }
+
   loadAuth = { name, pin };
   saveLoadAuth(loadAuth);
   renderLoadTab();
@@ -1745,17 +1797,64 @@ function switchTab(name) {
 }
 
 // --- ROUTING (vista "Cargar" en /cargar) ---
+let loadSyncing = false;
+
 function isLoadRoute() {
   return window.location.pathname.startsWith('/cargar');
 }
-function applyRoute() {
+
+function snapshotLoadInputs() {
+  const snap = {};
+  for (const m of KNOCKOUT_MATCHES) {
+    const hEl = document.getElementById(`lh${m.match}`);
+    const aEl = document.getElementById(`la${m.match}`);
+    if (!hEl || !aEl || hEl.disabled) continue;
+    const h = hEl.value;
+    const a = aEl.value;
+    if (h !== '' || a !== '') snap[m.match] = { home: h, away: a };
+  }
+  return snap;
+}
+function restoreLoadInputs(snap) {
+  for (const [matchNum, vals] of Object.entries(snap)) {
+    const hEl = document.getElementById(`lh${matchNum}`);
+    const aEl = document.getElementById(`la${matchNum}`);
+    if (hEl && !hEl.disabled) hEl.value = vals.home;
+    if (aEl && !aEl.disabled) aEl.value = vals.away;
+  }
+}
+
+async function verifyStoredAuth() {
+  if (!loadAuth.name || !loadAuth.pin) return;
+  try {
+    const r = await fetch('/api/predictions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'verify', name: loadAuth.name, pin: loadAuth.pin })
+    });
+    if (r.status === 403) {
+      loadAuth = {};
+      saveLoadAuth(loadAuth);
+    }
+  } catch(e) { /* network failure → keep cached auth */ }
+}
+
+async function applyRoute() {
   const isLoad = isLoadRoute();
   document.body.classList.toggle('view-load', isLoad);
-  if (isLoad) {
-    renderLoadTab();
-    document.getElementById('tab-load').classList.add('active');
-  }
   window.scrollTo(0, 0);
+  if (!isLoad) return;
+  document.getElementById('tab-load').classList.add('active');
+
+  await verifyStoredAuth();
+
+  loadSyncing = true;
+  renderLoadTab();
+  const snap = snapshotLoadInputs();
+  try { await syncResults(); } catch(e) { console.warn('sync error', e); }
+  loadSyncing = false;
+  renderLoadTab();
+  restoreLoadInputs(snap);
 }
 function goToCargar(e) {
   if (e) e.preventDefault();
