@@ -121,6 +121,46 @@
   .sync-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
   .sync-status { font-size: 0.7rem; color: #555; letter-spacing: 1px; }
 
+  .header-btns { display: flex; gap: 8px; align-items: center; }
+  .cargar-btn {
+    padding: 9px 18px;
+    background: var(--lime-neon); border: 2px solid var(--lime-neon); border-radius: 0;
+    color: #000; font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800; font-size: 0.9rem; letter-spacing: 1px;
+    text-transform: uppercase; cursor: pointer;
+    box-shadow: 3px 3px 0 #000;
+    transition: box-shadow 0.15s, transform 0.15s;
+    white-space: nowrap; text-decoration: none; display: inline-block;
+  }
+  .cargar-btn:hover { box-shadow: 5px 5px 0 #000; transform: translate(-1px,-1px); }
+  .cargar-btn:active { box-shadow: 1px 1px 0 #000; transform: translate(2px,2px); }
+
+  /* Vista "Cargar" — esconde lo principal y muestra solo el load tab */
+  body.view-load .featured-bar,
+  body.view-load .tabs,
+  body.view-load #tab-standings,
+  body.view-load #tab-matches,
+  body.view-load #tab-players { display: none !important; }
+  body.view-load #tab-load { display: block !important; }
+  body:not(.view-load) #tab-load { display: none !important; }
+
+  .back-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem; font-weight: 800; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--muted);
+    cursor: pointer; user-select: none;
+    margin-bottom: 18px; padding: 8px 0;
+    background: none; border: none; text-decoration: none;
+  }
+  .back-link:hover { color: var(--text); }
+  .page-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.4rem; font-weight: 900; letter-spacing: 3px;
+    text-transform: uppercase; margin-bottom: 18px;
+    padding-bottom: 10px; border-bottom: 3px solid var(--lime-neon);
+  }
+
   /* ── CONTAINER / TABS ── */
   .container { max-width: 1400px; margin: 0 auto; padding: 28px 16px; }
 
@@ -817,7 +857,10 @@
     </div>
   </div>
   <div class="sync-area">
-    <button class="sync-btn" id="sync-btn" onclick="syncResults()">↻<span class="sync-text"> Sincronizar resultados</span></button>
+    <div class="header-btns">
+      <a class="cargar-btn" href="/cargar" onclick="goToCargar(event)">📝<span class="sync-text"> Cargar pronósticos</span></a>
+      <button class="sync-btn" id="sync-btn" onclick="syncResults()">↻<span class="sync-text"> Sincronizar</span></button>
+    </div>
     <span class="sync-status" id="sync-status">Última sync: nunca</span>
   </div>
 </header>
@@ -839,7 +882,6 @@
     <button class="tab-btn active" onclick="switchTab('standings')">Posiciones</button>
     <button class="tab-btn" onclick="switchTab('matches')">Partidos</button>
     <button class="tab-btn" onclick="switchTab('players')">Jugadores</button>
-    <button class="tab-btn" onclick="switchTab('load')">Cargar</button>
   </div>
 
   <!-- STANDINGS TAB -->
@@ -1537,10 +1579,13 @@ function renderLoadTab() {
   const panel = document.getElementById('tab-load');
   if (!panel) return;
 
+  const backLink = `<a class="back-link" href="/" onclick="goToHome(event)">← Volver al prode</a>
+    <h2 class="page-title">Cargar pronósticos</h2>`;
+
   if (!loadAuth.name || !loadAuth.pin) {
-    panel.innerHTML = `
+    panel.innerHTML = `${backLink}
       <div class="load-card">
-        <h3>Cargar tus pronósticos</h3>
+        <h3>Identificate</h3>
         <p class="intro">
           Elegí tu nombre y un PIN de 4 a 6 dígitos. La <strong>primera vez</strong> que cargás, ese PIN queda asociado a tu nombre.
           Después tenés que usar el mismo PIN para editar tus pronósticos. Si te lo olvidás, avisale a Steph.
@@ -1566,7 +1611,7 @@ function renderLoadTab() {
   const userPreds = userPredictions[loadAuth.name] || {};
   const now = Date.now();
 
-  let html = `
+  let html = `${backLink}
     <div class="load-session">
       <div class="load-session-info">
         <div class="lbl">Cargando como</div>
@@ -1692,13 +1737,37 @@ function switchMatchView(view) {
 }
 
 function switchTab(name) {
-  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', ['standings','matches','players','load'][i]===name));
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', ['standings','matches','players'][i]===name));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.getElementById(`tab-${name}`).classList.add('active');
   if (name === 'matches') { renderGroupFilters(); renderMatchesAccordion(); }
   if (name === 'players') renderPlayers();
-  if (name === 'load') renderLoadTab();
 }
+
+// --- ROUTING (vista "Cargar" en /cargar) ---
+function isLoadRoute() {
+  return window.location.pathname.startsWith('/cargar');
+}
+function applyRoute() {
+  const isLoad = isLoadRoute();
+  document.body.classList.toggle('view-load', isLoad);
+  if (isLoad) {
+    renderLoadTab();
+    document.getElementById('tab-load').classList.add('active');
+  }
+  window.scrollTo(0, 0);
+}
+function goToCargar(e) {
+  if (e) e.preventDefault();
+  history.pushState({}, '', '/cargar');
+  applyRoute();
+}
+function goToHome(e) {
+  if (e) e.preventDefault();
+  history.pushState({}, '', '/');
+  applyRoute();
+}
+window.addEventListener('popstate', applyRoute);
 
 // --- SYNC with ESPN API ---
 
@@ -1851,8 +1920,10 @@ async function init() {
   renderStandings();
   renderGroupFilters();
   renderMatches();
+  applyRoute();
   await fetchPredictions();
   refresh();
+  if (isLoadRoute()) renderLoadTab();
 }
 init();
 </script>
