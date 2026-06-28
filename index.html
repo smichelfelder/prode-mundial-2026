@@ -498,6 +498,52 @@
   .sub-tab-btn.active { background: #111; border-color: #111; color: var(--lime-neon); }
   .sub-tab-btn:hover:not(.active) { border-color: #aaa; color: var(--text); }
 
+  /* ── PHASE ACCORDION ── */
+  .phase-section {
+    margin-bottom: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.08);
+  }
+  .phase-header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 18px; cursor: pointer;
+    background: #111; color: #fff;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .phase-header:hover { background: #1c1c1c; }
+  .phase-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.05rem; font-weight: 900; letter-spacing: 3px;
+    text-transform: uppercase; flex: 1;
+  }
+  .phase-count {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.75rem; font-weight: 700; color: #aaa;
+    background: #000; padding: 3px 10px;
+    border: 1px solid #333;
+  }
+  .phase-progress {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.7rem; font-weight: 700; color: var(--lime-neon);
+    letter-spacing: 1px;
+  }
+  .phase-chevron {
+    color: var(--lime-neon); font-size: 0.75rem;
+    transition: transform 0.2s;
+  }
+  .phase-section.open .phase-chevron { transform: rotate(180deg); }
+  .phase-body { padding: 14px 14px 6px; }
+  .phase-section:not(.open) .phase-body { display: none; }
+
+  @media (max-width: 768px) {
+    .phase-header { padding: 10px 12px; gap: 8px; }
+    .phase-title { font-size: 0.88rem; letter-spacing: 2px; }
+    .phase-progress { display: none; }
+    .phase-body { padding: 10px 8px 4px; }
+  }
+
   .chrono-day { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
   .chrono-day h2 {
     font-family: 'Barlow Condensed', sans-serif;
@@ -1085,8 +1131,28 @@ function renderStandings() {
 }
 
 // --- MATCHES ---
+const PHASES = [
+  { key: 'groups', label: 'Fase de Grupos', matches: () => MATCHES, hasGroups: true },
+  { key: 'R32',    label: 'Treintaidosavos de Final', matches: () => KNOCKOUT_MATCHES.filter(m => m.round === 'R32') },
+  { key: 'R16',    label: 'Octavos de Final',         matches: () => KNOCKOUT_MATCHES.filter(m => m.round === 'R16') },
+  { key: 'QF',     label: 'Cuartos de Final',         matches: () => KNOCKOUT_MATCHES.filter(m => m.round === 'QF') },
+  { key: 'SF',     label: 'Semifinales',              matches: () => KNOCKOUT_MATCHES.filter(m => m.round === 'SF') },
+  { key: '3RD',    label: 'Tercer Puesto',            matches: () => KNOCKOUT_MATCHES.filter(m => m.round === '3RD') },
+  { key: 'FINAL',  label: 'Final',                    matches: () => KNOCKOUT_MATCHES.filter(m => m.round === 'FINAL') },
+];
+
+// Determinar fase abierta por defecto: la del próximo partido (o R32 si no hay)
+function defaultExpandedPhase() {
+  const featured = getFeaturedMatch();
+  if (!featured) return 'R32';
+  const m = featured.match;
+  return m.group ? 'groups' : m.round;
+}
+let expandedPhases = null; // se inicializa en el primer render
+
 function renderGroupFilters() {
   const bar = document.getElementById('group-filters');
+  if (!bar) return;
   bar.innerHTML = `<button class="filter-btn ${activeGroup==='all'?'active':''}" onclick="filterGroup('all',this)">Todos</button>` +
     GROUPS.map(g => `<button class="filter-btn ${activeGroup===g?'active':''}" onclick="filterGroup('${g}',this)">Grupo ${g}</button>`).join('');
 }
@@ -1097,12 +1163,17 @@ function filterGroup(g, btn) {
   renderMatches();
 }
 
-function renderMatches() {
-  const container = document.getElementById('matches-container');
+function togglePhase(key) {
+  expandedPhases[key] = !expandedPhases[key];
+  renderMatchesAccordion();
+}
+
+function renderPhaseBodyByGroup(phaseMatches) {
   const groups = activeGroup === 'all' ? GROUPS : [activeGroup];
-  container.innerHTML = groups.map(g => {
+  return groups.map(g => {
     const ci = GROUP_COLOR[g];
-    const gMatches = MATCHES.filter(m => m.group === g);
+    const gMatches = phaseMatches.filter(m => m.group === g);
+    if (gMatches.length === 0) return '';
     return `<div class="group-section">
       <div class="group-title">
         <div class="group-badge gc-${ci}">${g}</div>
@@ -1112,6 +1183,74 @@ function renderMatches() {
     </div>`;
   }).join('');
 }
+
+function renderPhaseBodyByDay(phaseMatches) {
+  const sorted = [...phaseMatches].sort((a, b) => {
+    const da = MATCH_DATES[a.match] ? new Date(MATCH_DATES[a.match]) : new Date(0);
+    const db = MATCH_DATES[b.match] ? new Date(MATCH_DATES[b.match]) : new Date(0);
+    return da - db;
+  });
+  const byDay = {};
+  const dayOrder = [];
+  for (const m of sorted) {
+    const iso = MATCH_DATES[m.match];
+    const d = iso ? new Date(iso) : null;
+    const dayKey = d
+      ? d.toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid', weekday: 'long', day: 'numeric', month: 'long' })
+      : 'Sin fecha';
+    if (!byDay[dayKey]) { byDay[dayKey] = []; dayOrder.push(dayKey); }
+    byDay[dayKey].push(m);
+  }
+  return dayOrder.map(day => `<div class="group-section">
+      <div class="chrono-day"><h2>${day}</h2></div>
+      ${byDay[day].map(m => renderMatchCard(m, m.group ? GROUP_COLOR[m.group] : 0)).join('')}
+    </div>`).join('');
+}
+
+function renderMatchesAccordion() {
+  const container = document.getElementById('matches-container');
+  if (!container) return;
+  if (!expandedPhases) expandedPhases = { [defaultExpandedPhase()]: true };
+
+  // Filtros de grupo: solo visibles si la fase de grupos está abierta y el sub-tab es "Por Grupo"
+  const filtersWrap = document.getElementById('group-filters-wrap');
+  if (filtersWrap) {
+    const showFilters = activeMatchView === 'groups' && expandedPhases.groups;
+    filtersWrap.style.display = showFilters ? '' : 'none';
+  }
+
+  container.innerHTML = PHASES.map(phase => {
+    const phaseMatches = phase.matches();
+    const open = !!expandedPhases[phase.key];
+    const stats = phaseMatches.reduce((acc, m) => {
+      if (getResult(m.match)) acc.played++;
+      return acc;
+    }, { played: 0 });
+    const progress = phaseMatches.length > 0
+      ? `<span class="phase-progress">${stats.played}/${phaseMatches.length}</span>`
+      : '';
+
+    let body;
+    if (phase.hasGroups && activeMatchView === 'groups') {
+      body = renderPhaseBodyByGroup(phaseMatches);
+    } else {
+      body = renderPhaseBodyByDay(phaseMatches);
+    }
+
+    return `<div class="phase-section ${open ? 'open' : ''}">
+      <div class="phase-header" onclick="togglePhase('${phase.key}')">
+        <span class="phase-title">${phase.label}</span>
+        ${progress}
+        <span class="phase-count">${phaseMatches.length}</span>
+        <span class="phase-chevron">▼</span>
+      </div>
+      <div class="phase-body">${body}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderMatches() { renderMatchesAccordion(); }
+function renderChronoMatches() { renderMatchesAccordion(); }
 
 function renderMatchCard(m, ci) {
   const actual = getResult(m.match);
@@ -1554,39 +1693,8 @@ function switchMatchView(view) {
   activeMatchView = view;
   document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(`stb-${view}`).classList.add('active');
-  const filtersWrap = document.getElementById('group-filters-wrap');
-  if (filtersWrap) filtersWrap.style.display = view === 'groups' ? '' : 'none';
-  if (view === 'groups') { renderGroupFilters(); renderMatches(); }
-  else renderChronoMatches();
-}
-
-function renderChronoMatches() {
-  const container = document.getElementById('matches-container');
-  const sorted = [...ALL_MATCHES].sort((a, b) => {
-    const da = MATCH_DATES[a.match] ? new Date(MATCH_DATES[a.match]) : new Date(0);
-    const db = MATCH_DATES[b.match] ? new Date(MATCH_DATES[b.match]) : new Date(0);
-    return da - db;
-  });
-
-  const byDay = {};
-  const dayOrder = [];
-  for (const m of sorted) {
-    const iso = MATCH_DATES[m.match];
-    const d = iso ? new Date(iso) : null;
-    const dayKey = d
-      ? d.toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid', weekday: 'long', day: 'numeric', month: 'long' })
-      : 'Sin fecha';
-    if (!byDay[dayKey]) { byDay[dayKey] = []; dayOrder.push(dayKey); }
-    byDay[dayKey].push(m);
-  }
-
-  container.innerHTML = dayOrder.map(day => {
-    const dayMatches = byDay[day];
-    return `<div class="group-section">
-      <div class="chrono-day"><h2>${day}</h2></div>
-      ${dayMatches.map(m => renderMatchCard(m, m.group ? GROUP_COLOR[m.group] : 0)).join('')}
-    </div>`;
-  }).join('');
+  if (view === 'groups') renderGroupFilters();
+  renderMatchesAccordion();
 }
 
 function switchTab(name) {
