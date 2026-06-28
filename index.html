@@ -1969,10 +1969,11 @@ function normalizeSpanish(name) {
   return n;
 }
 
-// Build lookup: "homeKey|awayKey" → match number
+// Build lookup: "homeKey|awayKey" → match number (incluye eliminatorias)
 const MATCH_LOOKUP = (() => {
   const lkp = {};
-  for (const m of MATCHES) {
+  for (const m of ALL_MATCHES) {
+    if (m.home === 'TBD' || m.away === 'TBD') continue;
     lkp[normalizeSpanish(m.home) + '|' + normalizeSpanish(m.away)] = m.match;
   }
   return lkp;
